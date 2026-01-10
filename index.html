@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FoodCheck</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#27ae60">
+
+<style>
+body{
+  margin:0;
+  font-family: Arial, sans-serif;
+  background:#0f1416;
+  color:#fff;
+}
+header{
+  padding:15px;
+  background:#161a1c;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.logo{
+  width:40px;height:40px;
+  background:#27ae60;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  color:#000;
+}
+.container{
+  padding:15px;
+}
+.card{
+  background:#161a1c;
+  border-radius:12px;
+  padding:15px;
+  margin-bottom:15px;
+}
+button{
+  background:#27ae60;
+  border:none;
+  padding:10px 14px;
+  border-radius:8px;
+  font-weight:bold;
+  cursor:pointer;
+}
+input{
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+  border:none;
+  margin-top:8px;
+}
+.score{
+  width:120px;height:120px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:26px;
+  font-weight:bold;
+  margin:auto;
+}
+.green{background:#c8f7c5;color:#0b2b11;}
+.yellow{background:#fff3c4;color:#3a2d00;}
+.red{background:#ffd6d6;color:#3a0000;}
+.small{color:#aaa;font-size:13px;}
+ul{padding-left:18px;}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">F</div>
+  <div>
+    <b>FoodCheck</b><br>
+    <span class="small">Scan • Understand • Decide</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <b>Enter / Scan Barcode</b><br>
+    <input id="barcode" placeholder="Enter barcode number">
+    <button onclick="lookup()">Check Food</button>
+  </div>
+
+  <div class="card" id="result" style="display:none;">
+    <div id="scoreBox" class="score"></div>
+    <h3 id="productName"></h3>
+    <p id="summary" class="small"></p>
+
+    <b>Why?</b>
+    <ul id="reasons"></ul>
+
+    <b>Suggestions</b>
+    <ul id="suggestions"></ul>
+
+    <b>Ingredients</b>
+    <p id="ingredients" class="small"></p>
+  </div>
+
+</div>
+
+<script>
+async function lookup(){
+  const code = document.getElementById("barcode").value.trim();
+  if(!code){ alert("Enter barcode"); return; }
+
+  const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
+  const data = await res.json();
+  if(data.status !== 1){
+    alert("Product not found");
+    return;
+  }
+
+  const p = data.product;
+  const sugar = p.nutriments?.sugars_100g || 0;
+  const salt = p.nutriments?.salt_100g || 0;
+  const fat  = p.nutriments?.["saturated-fat_100g"] || 0;
+  const fiber = p.nutriments?.fiber_100g || 0;
+  const ingredients = (p.ingredients_text || "").toLowerCase();
+
+  let score = 100;
+  let reasons=[], suggestions=[];
+
+  if(sugar > 15){ score-=25; reasons.push("High sugar"); suggestions.push("Choose low-sugar alternatives"); }
+  if(salt > 1){ score-=20; reasons.push("High salt"); suggestions.push("Avoid high-sodium foods"); }
+  if(fat > 4){ score-=20; reasons.push("High saturated fat"); suggestions.push("Prefer baked or low-fat foods"); }
+  if(fiber < 1){ score-=10; reasons.push("Low fiber"); suggestions.push("Choose whole-grain foods"); }
+  if(ingredients.includes("e102") || ingredients.includes("tartrazine")){
+    score-=15; reasons.push("Contains artificial additives"); suggestions.push("Avoid artificial colors");
+  }
+
+  if(score<0) score=0;
+
+  const box = document.getElementById("scoreBox");
+  box.className="score " + (score>=80?"green":score>=50?"yellow":"red");
+  box.innerText = score;
+
+  document.getElementById("productName").innerText = p.product_name || "Food Item";
+  document.getElementById("summary").innerText =
+    score>=80?"Healthy choice":
+    score>=50?"Consume in moderation":"Unhealthy product";
+
+  document.getElementById("reasons").innerHTML = reasons.map(r=>`<li>${r}</li>`).join("");
+  document.getElementById("suggestions").innerHTML = suggestions.map(s=>`<li>${s}</li>`).join("");
+  document.getElementById("ingredients").innerText = p.ingredients_text || "Not available";
+
+  document.getElementById("result").style.display="block";
+}
+
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('service-worker.js');
+}
+</script>
+
+</body>
+</html>
