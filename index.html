@@ -8,17 +8,26 @@
 <style>
 body{
   margin:0;
-  font-family: Arial, sans-serif;
+  font-family:Arial,sans-serif;
   background:#0b0b0b;
   color:#fff;
 }
 .container{
-  max-width:420px;
+  max-width:440px;
   margin:auto;
   padding:20px;
 }
-h1{color:#4caf50;margin-bottom:5px}
+h1{color:#4caf50;margin-bottom:4px}
 .tagline{color:#aaa;font-size:14px;margin-bottom:20px}
+
+.card{
+  background:#141414;
+  border-radius:12px;
+  padding:16px;
+  margin-bottom:16px;
+  border:1px solid #1f1f1f;
+}
+
 input{
   width:100%;
   padding:14px;
@@ -37,15 +46,9 @@ button{
   margin-bottom:10px;
   cursor:pointer;
 }
-.scanBtn{
-  background:#222;
-  color:#fff;
-}
-.checkBtn{
-  background:#4caf50;
-  color:#000;
-}
-.result{margin-top:20px}
+.scanBtn{background:#222;color:#fff}
+.checkBtn{background:#4caf50;color:#000}
+
 .score{
   width:120px;height:120px;
   border-radius:50%;
@@ -53,14 +56,39 @@ button{
   align-items:center;
   justify-content:center;
   font-size:34px;
-  margin:15px auto;
+  margin:10px auto;
 }
 .healthy{background:#1b5e20}
 .moderate{background:#f9a825;color:#000}
 .unhealthy{background:#8e0000}
+
+.legend{font-size:13px;color:#bbb;text-align:center;margin-top:6px}
+.legend span{margin-right:10px}
+
 .warning{color:#ffcc80;font-size:13px;margin-top:10px}
 .ingredients{font-size:13px;color:#bbb;line-height:1.5}
-video{width:100%;border-radius:10px;margin-bottom:10px;display:none}
+
+video{
+  width:100%;
+  border-radius:10px;
+  margin-bottom:10px;
+  display:none;
+}
+
+details{
+  margin-top:10px;
+}
+details summary{
+  cursor:pointer;
+  color:#4caf50;
+  font-weight:bold;
+}
+footer{
+  margin-top:20px;
+  font-size:12px;
+  color:#888;
+  text-align:center;
+}
 </style>
 </head>
 
@@ -69,12 +97,45 @@ video{width:100%;border-radius:10px;margin-bottom:10px;display:none}
   <h1>Nutri</h1>
   <div class="tagline">Scan · Understand · Decide</div>
 
-  <input id="barcode" placeholder="Enter barcode number">
-  <button class="scanBtn" onclick="startScan()">📷 Scan Barcode</button>
-  <button class="checkBtn" onclick="checkFood()">Check Food</button>
+  <div class="card">
+    <input id="barcode" placeholder="Enter barcode number">
+    <button class="scanBtn" onclick="startScan()">📷 Scan Barcode</button>
+    <button class="checkBtn" onclick="checkFood()">Check Food</button>
+    <video id="video"></video>
+  </div>
 
-  <video id="video"></video>
-  <div id="output" class="result"></div>
+  <div id="output"></div>
+
+  <div class="card">
+    <b>📊 What is Nutri Score?</b>
+    <p style="font-size:13px;color:#bbb">
+      Nutri Score represents the overall nutritional quality of a food item on a scale of 0–100.
+      It is calculated using sugar, saturated fat, fiber, and ingredient analysis.
+    </p>
+    <div class="legend">
+      <span>🟢 70–100 Healthy</span>
+      <span>🟡 40–69 Moderate</span>
+      <span>🔴 0–39 Unhealthy</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <details>
+      <summary>🔮 Future Enhancements</summary>
+      <ul>
+        <li>Detection of more food additives and color codes (E-numbers)</li>
+        <li>Automatic translation of ingredients into English</li>
+        <li>Advanced ingredient and chemical analysis</li>
+        <li>Category-based scoring (drinks, snacks, etc.)</li>
+        <li>Personalized nutrition recommendations</li>
+      </ul>
+    </details>
+  </div>
+
+  <footer>
+    Data source: Open Food Facts<br>
+    Results are indicative and not medical advice
+  </footer>
 </div>
 
 <script>
@@ -85,35 +146,25 @@ async function startScan(){
     alert("Camera scanning not supported on this browser");
     return;
   }
-
   const video=document.getElementById("video");
   video.style.display="block";
-
   stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
   video.srcObject=stream;
   await video.play();
-
   const detector=new BarcodeDetector({formats:["ean_13","ean_8","upc_a","upc_e"]});
-
-  const scanLoop=async()=>{
+  const scan=async()=>{
     const codes=await detector.detect(video);
     if(codes.length){
       document.getElementById("barcode").value=codes[0].rawValue;
       stopScan();
-    }else{
-      requestAnimationFrame(scanLoop);
-    }
+    }else requestAnimationFrame(scan);
   };
-  scanLoop();
+  scan();
 }
-
 function stopScan(){
   const video=document.getElementById("video");
   video.style.display="none";
-  if(stream){
-    stream.getTracks().forEach(t=>t.stop());
-    stream=null;
-  }
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
 }
 
 async function checkFood(){
@@ -121,21 +172,16 @@ async function checkFood(){
   const code=document.getElementById("barcode").value.trim();
   const out=document.getElementById("output");
   out.innerHTML="";
-
-  if(!code){
-    alert("Enter barcode");
-    return;
-  }
+  if(!code){alert("Enter barcode");return;}
 
   const res=await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
   const data=await res.json();
   if(!data.product){
-    out.innerHTML="<p>❌ Product not found in database.</p>";
+    out.innerHTML="<div class='card'>❌ Product not found in database.</div>";
     return;
   }
 
   const p=data.product;
-  const name=p.product_name||"Food Item";
   const ing=p.ingredients_text||"Not available";
   const n=p.nutriments||{};
   const sugar=n.sugars_100g ?? null;
@@ -159,29 +205,29 @@ async function checkFood(){
     warning="⚠️ Result based on limited nutrition data";
   }
 
-  let cls="healthy",label="Healthy choice";
+  let cls="healthy",label="Healthy";
   if(score<40){cls="unhealthy";label="Unhealthy"}
   else if(score<70){cls="moderate";label="Moderate"}
 
-  if(suggestions.length===0){
-    suggestions.push("Consume in moderation");
-  }
+  if(!suggestions.length)suggestions.push("Consume in moderation");
 
   out.innerHTML=`
-    <div class="score ${cls}">${score}</div>
-    <h2 style="text-align:center">${name}</h2>
-    <p style="text-align:center">${label}</p>
+    <div class="card">
+      <div class="score ${cls}">${score}</div>
+      <h3 style="text-align:center">${p.product_name||"Food Item"}</h3>
+      <p style="text-align:center">${label}</p>
 
-    <b>Why?</b>
-    <ul>${reasons.map(r=>`<li>${r}</li>`).join("")}</ul>
+      <b>Why?</b>
+      <ul>${reasons.map(r=>`<li>${r}</li>`).join("")}</ul>
 
-    <b>Suggestions</b>
-    <ul>${suggestions.map(s=>`<li>${s}</li>`).join("")}</ul>
+      <b>Suggestions</b>
+      <ul>${suggestions.map(s=>`<li>${s}</li>`).join("")}</ul>
 
-    <b>Ingredients</b>
-    <div class="ingredients">${ing}</div>
+      <b>Ingredients</b>
+      <div class="ingredients">${ing}</div>
 
-    ${warning?`<div class="warning">${warning}</div>`:""}
+      ${warning?`<div class="warning">${warning}</div>`:""}
+    </div>
   `;
 }
 </script>
