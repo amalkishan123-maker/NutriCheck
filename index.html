@@ -166,6 +166,10 @@ async function checkFood(){
 
   ingredients.innerHTML=`<div class="ingredients">${ing}</div>`;
 }
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js');
+}
 </script>
 </body>
 </html>
