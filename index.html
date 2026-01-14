@@ -38,19 +38,22 @@ h1{color:var(--green);margin:4px 0}
   border-radius:14px;
   padding:14px;
   margin-bottom:14px;
-  animation:fadeUp .4s ease;
 }
 
-@keyframes fadeUp{
-  from{opacity:0;transform:translateY(10px)}
-  to{opacity:1;transform:translateY(0)}
+.screen{
+  animation:slideFade .35s ease;
+}
+
+@keyframes slideFade{
+  from{opacity:0;transform:translateX(12px)}
+  to{opacity:1;transform:translateX(0)}
 }
 
 /* INPUT FIX */
 input{
   width:100%;
   padding:12px;
-  font-size:16px;          /* IMPORTANT: stops mobile zoom */
+  font-size:16px;
   border-radius:10px;
   border:none;
   background:#1f1f1f;
@@ -112,7 +115,6 @@ button{
   color:var(--muted);
 }
 
-/* LISTS */
 .good{color:#66bb6a}
 .bad{color:#ef5350}
 
@@ -151,7 +153,7 @@ footer{
 <h1>Nutri</h1>
 <div class="tagline">Scan · Understand · Decide</div>
 
-<!-- INPUT CARD -->
+<!-- INPUT -->
 <div class="card">
   <input id="barcode" placeholder="Enter barcode number">
   <button class="scanBtn" onclick="startScan()">📷 Scan Barcode</button>
@@ -168,30 +170,28 @@ footer{
 </div>
 
 <!-- HOME -->
-<div id="home" class="card">
+<div id="home" class="card screen">
   <h3>What is Nutri Score?</h3>
   <p>
-    Nutri helps you quickly understand how healthy a food product is
-    based on available nutrition data.
+    Nutri Score represents the overall nutritional quality of a food product
+    based on available nutrition and ingredient data.
   </p>
   <ul>
-    <li>🟢 <b>70–100</b> → Healthy choice</li>
+    <li>🟢 <b>70–100</b> → Healthy</li>
     <li>🟡 <b>40–69</b> → Moderate</li>
     <li>🔴 <b>0–39</b> → Unhealthy</li>
   </ul>
-  <p style="color:var(--muted)">
-    Scan or enter a barcode to begin.
-  </p>
+  <p style="color:var(--muted)">Scan or enter a barcode to begin.</p>
 </div>
 
 <!-- OVERVIEW -->
-<div id="overview" class="card hidden"></div>
+<div id="overview" class="card hidden screen"></div>
 
 <!-- NUTRITION -->
-<div id="nutrition" class="card hidden"></div>
+<div id="nutrition" class="card hidden screen"></div>
 
 <!-- INGREDIENTS -->
-<div id="ingredients" class="card hidden"></div>
+<div id="ingredients" class="card hidden screen"></div>
 
 <footer>
   Data source: Open Food Facts<br>
@@ -210,6 +210,8 @@ function openTab(id){
   [...document.querySelectorAll('.tab')]
     .find(t=>t.textContent.toLowerCase().includes(id))
     .classList.add('active');
+
+  window.scrollTo({top:0,behavior:"smooth"});
 }
 
 /* CAMERA SCAN */
@@ -230,7 +232,7 @@ async function startScan(){
     if(c.length){
       barcode.value=c[0].rawValue;
       stopScan();
-    } else requestAnimationFrame(scan);
+    }else requestAnimationFrame(scan);
   })();
 }
 function stopScan(){
@@ -262,12 +264,26 @@ async function checkFood(){
   const fiber=n.fiber_100g??null;
   const energy=n.energy_kcal_100g??null;
 
-  let score=100,good=[],bad=[];
-  if(sugar!==null && sugar>10){score-=40;bad.push("High sugar")}
-  if(fat!==null && fat>5){score-=25;bad.push("High saturated fat")}
-  if(fiber!==null && fiber<2){score-=15;bad.push("Low fiber")}
-  if(fiber!==null && fiber>=3)good.push("Good fiber content");
-  if(sugar!==null && sugar<=5)good.push("Low sugar");
+  let score=100;
+  let good=[],bad=[],suggestions=[];
+
+  if(sugar!==null && sugar>10){
+    score-=40;
+    bad.push("High sugar");
+    suggestions.push("Reduce sugary foods and drinks");
+  }
+  if(fat!==null && fat>5){
+    score-=25;
+    bad.push("High saturated fat");
+    suggestions.push("Prefer low-fat or baked options");
+  }
+  if(fiber!==null && fiber<2){
+    score-=15;
+    bad.push("Low fiber");
+    suggestions.push("Choose fiber-rich foods");
+  }
+  if(fiber!==null && fiber>=3) good.push("Good fiber content");
+  if(sugar!==null && sugar<=5) good.push("Low sugar");
 
   let cls="healthy",label="Healthy";
   if(score<40){cls="unhealthy";label="Unhealthy"}
@@ -276,10 +292,15 @@ async function checkFood(){
   overview.innerHTML=`
     <div class="score ${cls}">${score}</div>
     <div style="text-align:center"><b>${p.product_name||"Food Item"}</b><br>${label}</div>
+
     <h4 class="good">🙂 What We Like</h4>
     <ul>${good.length?good.map(x=>`<li>${x}</li>`).join(""):"<li>—</li>"}</ul>
+
     <h4 class="bad">😟 What Concerns Us</h4>
     <ul>${bad.length?bad.map(x=>`<li>${x}</li>`).join(""):"<li>—</li>"}</ul>
+
+    <h4>💡 Suggestions</h4>
+    <ul>${suggestions.length?suggestions.map(s=>`<li>${s}</li>`).join(""):"<li>Consume in moderation</li>"}</ul>
   `;
 
   nutrition.innerHTML=`
