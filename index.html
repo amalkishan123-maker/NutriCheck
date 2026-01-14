@@ -6,89 +6,50 @@
 <title>Nutri</title>
 
 <style>
-body{
-  margin:0;
-  font-family:Arial,sans-serif;
-  background:#0b0b0b;
-  color:#fff;
-}
-.container{
-  max-width:440px;
-  margin:auto;
-  padding:20px;
-}
-h1{color:#4caf50;margin-bottom:4px}
-.tagline{color:#aaa;font-size:14px;margin-bottom:20px}
+body{margin:0;font-family:Arial,sans-serif;background:#0b0b0b;color:#fff}
+.container{max-width:460px;margin:auto;padding:16px}
+h1{color:#4caf50;margin:4px 0}
+.tagline{color:#aaa;font-size:14px;margin-bottom:12px}
 
-.card{
-  background:#141414;
-  border-radius:12px;
-  padding:16px;
-  margin-bottom:16px;
-  border:1px solid #1f1f1f;
-}
+.card{background:#141414;border:1px solid #1f1f1f;border-radius:12px;padding:14px;margin-bottom:14px}
 
-input{
-  width:100%;
-  padding:14px;
-  border-radius:8px;
-  border:none;
-  background:#1f1f1f;
-  color:#fff;
-  margin-bottom:10px;
-}
-button{
-  width:100%;
-  padding:14px;
-  border-radius:8px;
-  border:none;
-  font-weight:bold;
-  margin-bottom:10px;
-  cursor:pointer;
-}
+input{width:100%;padding:14px;border-radius:8px;border:none;background:#1f1f1f;color:#fff;margin-bottom:8px}
+button{width:100%;padding:14px;border-radius:8px;border:none;font-weight:bold;margin-bottom:8px;cursor:pointer}
 .scanBtn{background:#222;color:#fff}
 .checkBtn{background:#4caf50;color:#000}
 
-.score{
-  width:120px;height:120px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:34px;
-  margin:10px auto;
-}
+.tabs{display:flex;gap:6px;margin-bottom:10px}
+.tab{flex:1;text-align:center;padding:10px;border-radius:8px;background:#1f1f1f;color:#bbb;cursor:pointer}
+.tab.active{background:#4caf50;color:#000;font-weight:bold}
+
+.score{width:120px;height:120px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34px;margin:10px auto}
 .healthy{background:#1b5e20}
 .moderate{background:#f9a825;color:#000}
 .unhealthy{background:#8e0000}
 
-.legend{font-size:13px;color:#bbb;text-align:center;margin-top:6px}
-.legend span{margin-right:10px}
+.legend{font-size:12px;color:#bbb;text-align:center}
+.legend span{margin-right:8px}
 
-.warning{color:#ffcc80;font-size:13px;margin-top:10px}
+.sectionTitle{font-weight:bold;margin:6px 0}
+.good{color:#66bb6a}
+.bad{color:#ef5350}
+
+.row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #222}
+.row:last-child{border-bottom:none}
+.value.good{color:#66bb6a}
+.value.mid{color:#ffb74d}
+.value.bad{color:#ef5350}
+
+details{background:#111;border-radius:10px;padding:10px;margin-bottom:8px}
+details summary{cursor:pointer;font-weight:bold}
+
 .ingredients{font-size:13px;color:#bbb;line-height:1.5}
+.warning{color:#ffcc80;font-size:13px;margin-top:8px}
 
-video{
-  width:100%;
-  border-radius:10px;
-  margin-bottom:10px;
-  display:none;
-}
+video{width:100%;border-radius:10px;display:none;margin-bottom:8px}
 
-details{
-  margin-top:10px;
-}
-details summary{
-  cursor:pointer;
-  color:#4caf50;
-  font-weight:bold;
-}
-footer{
-  margin-top:20px;
-  font-size:12px;
-  color:#888;
-  text-align:center;
-}
+footer{font-size:12px;color:#888;text-align:center;margin-top:10px}
+.hidden{display:none}
 </style>
 </head>
 
@@ -104,131 +65,106 @@ footer{
     <video id="video"></video>
   </div>
 
-  <div id="output"></div>
-
-  <div class="card">
-    <b>📊 What is Nutri Score?</b>
-    <p style="font-size:13px;color:#bbb">
-      Nutri Score represents the overall nutritional quality of a food item on a scale of 0–100.
-      It is calculated using sugar, saturated fat, fiber, and ingredient analysis.
-    </p>
-    <div class="legend">
-      <span>🟢 70–100 Healthy</span>
-      <span>🟡 40–69 Moderate</span>
-      <span>🔴 0–39 Unhealthy</span>
-    </div>
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('overview')">Overview</div>
+    <div class="tab" onclick="showTab('nutrition')">Nutrition</div>
+    <div class="tab" onclick="showTab('ingredients')">Ingredients</div>
   </div>
+
+  <div id="overview" class="card"></div>
+  <div id="nutrition" class="card hidden"></div>
+  <div id="ingredients" class="card hidden"></div>
 
   <div class="card">
     <details>
       <summary>🔮 Future Enhancements</summary>
       <ul>
-        <li>Detection of more food additives and color codes (E-numbers)</li>
-        <li>Automatic translation of ingredients into English</li>
-        <li>Advanced ingredient and chemical analysis</li>
-        <li>Category-based scoring (drinks, snacks, etc.)</li>
-        <li>Personalized nutrition recommendations</li>
+        <li>Detection of more additives and E-numbers</li>
+        <li>Automatic ingredient translation</li>
+        <li>Advanced ingredient analysis</li>
+        <li>Category-based scoring</li>
       </ul>
     </details>
   </div>
 
   <footer>
     Data source: Open Food Facts<br>
-    Results are indicative and not medical advice
+    Results are indicative, not medical advice
   </footer>
 </div>
 
 <script>
-let stream=null;
+function showTab(id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#overview,#nutrition,#ingredients').forEach(d=>d.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  [...document.querySelectorAll('.tab')].find(t=>t.textContent.toLowerCase().includes(id)).classList.add('active');
+}
 
+let stream=null;
 async function startScan(){
-  if(!('BarcodeDetector' in window)){
-    alert("Camera scanning not supported on this browser");
-    return;
-  }
-  const video=document.getElementById("video");
-  video.style.display="block";
+  if(!('BarcodeDetector'in window)){alert("Camera scan not supported");return;}
+  const v=document.getElementById("video");v.style.display="block";
   stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
-  video.srcObject=stream;
-  await video.play();
-  const detector=new BarcodeDetector({formats:["ean_13","ean_8","upc_a","upc_e"]});
-  const scan=async()=>{
-    const codes=await detector.detect(video);
-    if(codes.length){
-      document.getElementById("barcode").value=codes[0].rawValue;
-      stopScan();
-    }else requestAnimationFrame(scan);
-  };
-  scan();
+  v.srcObject=stream;await v.play();
+  const d=new BarcodeDetector({formats:["ean_13","ean_8","upc_a","upc_e"]});
+  (async function scan(){
+    const c=await d.detect(v);
+    if(c.length){document.getElementById("barcode").value=c[0].rawValue;stopScan();}
+    else requestAnimationFrame(scan);
+  })();
 }
-function stopScan(){
-  const video=document.getElementById("video");
-  video.style.display="none";
-  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
-}
+function stopScan(){const v=document.getElementById("video");v.style.display="none";if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}}
 
 async function checkFood(){
   stopScan();
-  const code=document.getElementById("barcode").value.trim();
-  const out=document.getElementById("output");
-  out.innerHTML="";
+  const code=barcode.value.trim();
   if(!code){alert("Enter barcode");return;}
 
-  const res=await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
-  const data=await res.json();
-  if(!data.product){
-    out.innerHTML="<div class='card'>❌ Product not found in database.</div>";
-    return;
-  }
+  const r=await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
+  const d=await r.json();
+  if(!d.product){overview.innerHTML="❌ Product not found";return;}
 
-  const p=data.product;
-  const ing=p.ingredients_text||"Not available";
-  const n=p.nutriments||{};
-  const sugar=n.sugars_100g ?? null;
-  const fat=n.saturated_fat_100g ?? null;
-  const fiber=n.fiber_100g ?? null;
+  const p=d.product,n=p.nutriments||{},ing=p.ingredients_text||"Not available";
+  const sugar=n.sugars_100g??null,fat=n.saturated_fat_100g??null,fiber=n.fiber_100g??null,energy=n.energy_kcal_100g??null;
 
-  let score=100,reasons=[],suggestions=[],warning="";
+  let score=100,reasons=[],good=[],warn="";
+  if(sugar!==null&&sugar>10){score-=40;reasons.push("High sugar")}
+  if(fat!==null&&fat>5){score-=25;reasons.push("High saturated fat")}
+  if(fiber!==null&&fiber<2){score-=15;reasons.push("Low fiber")}
+  if(fiber!==null&&fiber>=3)good.push("Good fiber content");
+  if(sugar!==null&&sugar<=5)good.push("Low sugar");
 
-  if(sugar!==null && sugar>10){score-=40;reasons.push("High sugar")}
-  if(fat!==null && fat>5){score-=25;reasons.push("High saturated fat")}
-  if(fiber!==null && fiber<2){score-=15;reasons.push("Low fiber")}
+  const soft=ing.toLowerCase().includes("carbonated")&&ing.toLowerCase().includes("sugar");
+  if(soft){score=Math.min(score,30);reasons.push("Sugary beverage")}
 
-  const softDrink=ing.toLowerCase().includes("carbonated") && ing.toLowerCase().includes("sugar");
-  if(softDrink){
-    score=Math.min(score,30);
-    reasons.push("Sugary beverage");
-    suggestions.push("Avoid sugary drinks");
-  }
-
-  if(sugar===null || fat===null){
-    warning="⚠️ Result based on limited nutrition data";
-  }
+  if(sugar===null||fat===null)warn="⚠️ Result based on limited nutrition data";
 
   let cls="healthy",label="Healthy";
   if(score<40){cls="unhealthy";label="Unhealthy"}
   else if(score<70){cls="moderate";label="Moderate"}
 
-  if(!suggestions.length)suggestions.push("Consume in moderation");
-
-  out.innerHTML=`
-    <div class="card">
-      <div class="score ${cls}">${score}</div>
-      <h3 style="text-align:center">${p.product_name||"Food Item"}</h3>
-      <p style="text-align:center">${label}</p>
-
-      <b>Why?</b>
-      <ul>${reasons.map(r=>`<li>${r}</li>`).join("")}</ul>
-
-      <b>Suggestions</b>
-      <ul>${suggestions.map(s=>`<li>${s}</li>`).join("")}</ul>
-
-      <b>Ingredients</b>
-      <div class="ingredients">${ing}</div>
-
-      ${warning?`<div class="warning">${warning}</div>`:""}
+  overview.innerHTML=`
+    <div class="score ${cls}">${score}</div>
+    <div style="text-align:center"><b>${p.product_name||"Food Item"}</b><br>${label}</div>
+    <div class="legend">
+      <span>🟢 70–100 Healthy</span><span>🟡 40–69 Moderate</span><span>🔴 0–39 Unhealthy</span>
     </div>
+    <div class="sectionTitle good">🙂 What We Like</div>
+    <ul>${good.length?good.map(x=>`<li>${x}</li>`).join(""):"<li>—</li>"}</ul>
+    <div class="sectionTitle bad">😟 What Concerns Us</div>
+    <ul>${reasons.length?reasons.map(x=>`<li>${x}</li>`).join(""):"<li>—</li>"}</ul>
+    ${warn?`<div class="warning">${warn}</div>`:""}
   `;
+
+  nutrition.innerHTML=`
+    <details open><summary>Energy</summary><div class="row"><span>Energy</span><span class="value mid">${energy??"N/A"} kcal</span></div></details>
+    <details><summary>Total Sugars</summary><div class="row"><span>Sugars</span><span class="value bad">${sugar??"N/A"} g</span></div></details>
+    <details><summary>Total Fat</summary><div class="row"><span>Saturated Fat</span><span class="value bad">${fat??"N/A"} g</span></div></details>
+    <details><summary>Dietary Fiber</summary><div class="row"><span>Fiber</span><span class="value good">${fiber??"N/A"} g</span></div></details>
+  `;
+
+  ingredients.innerHTML=`<div class="ingredients">${ing}</div>`;
 }
 </script>
 </body>
