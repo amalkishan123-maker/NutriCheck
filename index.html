@@ -3,164 +3,187 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FoodCheck</title>
-
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#27ae60">
+<title>Nutri</title>
 
 <style>
 body{
   margin:0;
   font-family: Arial, sans-serif;
-  background:#0f1416;
+  background:#0b0b0b;
   color:#fff;
 }
-header{
-  padding:15px;
-  background:#161a1c;
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-.logo{
-  width:40px;height:40px;
-  background:#27ae60;
-  border-radius:10px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:bold;
-  color:#000;
-}
 .container{
-  padding:15px;
+  max-width:420px;
+  margin:auto;
+  padding:20px;
 }
-.card{
-  background:#161a1c;
-  border-radius:12px;
-  padding:15px;
-  margin-bottom:15px;
-}
-button{
-  background:#27ae60;
-  border:none;
-  padding:10px 14px;
-  border-radius:8px;
-  font-weight:bold;
-  cursor:pointer;
-}
+h1{color:#4caf50;margin-bottom:5px}
+.tagline{color:#aaa;font-size:14px;margin-bottom:20px}
 input{
   width:100%;
-  padding:10px;
+  padding:14px;
   border-radius:8px;
   border:none;
-  margin-top:8px;
+  background:#1f1f1f;
+  color:#fff;
+  margin-bottom:10px;
 }
+button{
+  width:100%;
+  padding:14px;
+  border-radius:8px;
+  border:none;
+  font-weight:bold;
+  margin-bottom:10px;
+  cursor:pointer;
+}
+.scanBtn{
+  background:#222;
+  color:#fff;
+}
+.checkBtn{
+  background:#4caf50;
+  color:#000;
+}
+.result{margin-top:20px}
 .score{
   width:120px;height:120px;
   border-radius:50%;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:26px;
-  font-weight:bold;
-  margin:auto;
+  font-size:34px;
+  margin:15px auto;
 }
-.green{background:#c8f7c5;color:#0b2b11;}
-.yellow{background:#fff3c4;color:#3a2d00;}
-.red{background:#ffd6d6;color:#3a0000;}
-.small{color:#aaa;font-size:13px;}
-ul{padding-left:18px;}
+.healthy{background:#1b5e20}
+.moderate{background:#f9a825;color:#000}
+.unhealthy{background:#8e0000}
+.warning{color:#ffcc80;font-size:13px;margin-top:10px}
+.ingredients{font-size:13px;color:#bbb;line-height:1.5}
+video{width:100%;border-radius:10px;margin-bottom:10px;display:none}
 </style>
 </head>
 
 <body>
-
-<header>
-  <div class="logo">F</div>
-  <div>
-    <b>FoodCheck</b><br>
-    <span class="small">Scan • Understand • Decide</span>
-  </div>
-</header>
-
 <div class="container">
+  <h1>Nutri</h1>
+  <div class="tagline">Scan · Understand · Decide</div>
 
-  <div class="card">
-    <b>Enter / Scan Barcode</b><br>
-    <input id="barcode" placeholder="Enter barcode number">
-    <button onclick="lookup()">Check Food</button>
-  </div>
+  <input id="barcode" placeholder="Enter barcode number">
+  <button class="scanBtn" onclick="startScan()">📷 Scan Barcode</button>
+  <button class="checkBtn" onclick="checkFood()">Check Food</button>
 
-  <div class="card" id="result" style="display:none;">
-    <div id="scoreBox" class="score"></div>
-    <h3 id="productName"></h3>
-    <p id="summary" class="small"></p>
-
-    <b>Why?</b>
-    <ul id="reasons"></ul>
-
-    <b>Suggestions</b>
-    <ul id="suggestions"></ul>
-
-    <b>Ingredients</b>
-    <p id="ingredients" class="small"></p>
-  </div>
-
+  <video id="video"></video>
+  <div id="output" class="result"></div>
 </div>
 
 <script>
-async function lookup(){
-  const code = document.getElementById("barcode").value.trim();
-  if(!code){ alert("Enter barcode"); return; }
+let stream=null;
 
-  const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
-  const data = await res.json();
-  if(data.status !== 1){
-    alert("Product not found");
+async function startScan(){
+  if(!('BarcodeDetector' in window)){
+    alert("Camera scanning not supported on this browser");
     return;
   }
 
-  const p = data.product;
-  const sugar = p.nutriments?.sugars_100g || 0;
-  const salt = p.nutriments?.salt_100g || 0;
-  const fat  = p.nutriments?.["saturated-fat_100g"] || 0;
-  const fiber = p.nutriments?.fiber_100g || 0;
-  const ingredients = (p.ingredients_text || "").toLowerCase();
+  const video=document.getElementById("video");
+  video.style.display="block";
 
-  let score = 100;
-  let reasons=[], suggestions=[];
+  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+  video.srcObject=stream;
+  await video.play();
 
-  if(sugar > 15){ score-=25; reasons.push("High sugar"); suggestions.push("Choose low-sugar alternatives"); }
-  if(salt > 1){ score-=20; reasons.push("High salt"); suggestions.push("Avoid high-sodium foods"); }
-  if(fat > 4){ score-=20; reasons.push("High saturated fat"); suggestions.push("Prefer baked or low-fat foods"); }
-  if(fiber < 1){ score-=10; reasons.push("Low fiber"); suggestions.push("Choose whole-grain foods"); }
-  if(ingredients.includes("e102") || ingredients.includes("tartrazine")){
-    score-=15; reasons.push("Contains artificial additives"); suggestions.push("Avoid artificial colors");
+  const detector=new BarcodeDetector({formats:["ean_13","ean_8","upc_a","upc_e"]});
+
+  const scanLoop=async()=>{
+    const codes=await detector.detect(video);
+    if(codes.length){
+      document.getElementById("barcode").value=codes[0].rawValue;
+      stopScan();
+    }else{
+      requestAnimationFrame(scanLoop);
+    }
+  };
+  scanLoop();
+}
+
+function stopScan(){
+  const video=document.getElementById("video");
+  video.style.display="none";
+  if(stream){
+    stream.getTracks().forEach(t=>t.stop());
+    stream=null;
+  }
+}
+
+async function checkFood(){
+  stopScan();
+  const code=document.getElementById("barcode").value.trim();
+  const out=document.getElementById("output");
+  out.innerHTML="";
+
+  if(!code){
+    alert("Enter barcode");
+    return;
   }
 
-  if(score<0) score=0;
+  const res=await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
+  const data=await res.json();
+  if(!data.product){
+    out.innerHTML="<p>❌ Product not found in database.</p>";
+    return;
+  }
 
-  const box = document.getElementById("scoreBox");
-  box.className="score " + (score>=80?"green":score>=50?"yellow":"red");
-  box.innerText = score;
+  const p=data.product;
+  const name=p.product_name||"Food Item";
+  const ing=p.ingredients_text||"Not available";
+  const n=p.nutriments||{};
+  const sugar=n.sugars_100g ?? null;
+  const fat=n.saturated_fat_100g ?? null;
+  const fiber=n.fiber_100g ?? null;
 
-  document.getElementById("productName").innerText = p.product_name || "Food Item";
-  document.getElementById("summary").innerText =
-    score>=80?"Healthy choice":
-    score>=50?"Consume in moderation":"Unhealthy product";
+  let score=100,reasons=[],suggestions=[],warning="";
 
-  document.getElementById("reasons").innerHTML = reasons.map(r=>`<li>${r}</li>`).join("");
-  document.getElementById("suggestions").innerHTML = suggestions.map(s=>`<li>${s}</li>`).join("");
-  document.getElementById("ingredients").innerText = p.ingredients_text || "Not available";
+  if(sugar!==null && sugar>10){score-=40;reasons.push("High sugar")}
+  if(fat!==null && fat>5){score-=25;reasons.push("High saturated fat")}
+  if(fiber!==null && fiber<2){score-=15;reasons.push("Low fiber")}
 
-  document.getElementById("result").style.display="block";
-}
+  const softDrink=ing.toLowerCase().includes("carbonated") && ing.toLowerCase().includes("sugar");
+  if(softDrink){
+    score=Math.min(score,30);
+    reasons.push("Sugary beverage");
+    suggestions.push("Avoid sugary drinks");
+  }
 
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('service-worker.js');
+  if(sugar===null || fat===null){
+    warning="⚠️ Result based on limited nutrition data";
+  }
+
+  let cls="healthy",label="Healthy choice";
+  if(score<40){cls="unhealthy";label="Unhealthy"}
+  else if(score<70){cls="moderate";label="Moderate"}
+
+  if(suggestions.length===0){
+    suggestions.push("Consume in moderation");
+  }
+
+  out.innerHTML=`
+    <div class="score ${cls}">${score}</div>
+    <h2 style="text-align:center">${name}</h2>
+    <p style="text-align:center">${label}</p>
+
+    <b>Why?</b>
+    <ul>${reasons.map(r=>`<li>${r}</li>`).join("")}</ul>
+
+    <b>Suggestions</b>
+    <ul>${suggestions.map(s=>`<li>${s}</li>`).join("")}</ul>
+
+    <b>Ingredients</b>
+    <div class="ingredients">${ing}</div>
+
+    ${warning?`<div class="warning">${warning}</div>`:""}
+  `;
 }
 </script>
-
 </body>
 </html>
