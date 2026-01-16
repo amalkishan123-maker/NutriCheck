@@ -1,7 +1,6 @@
 {
   "name": "Nutri",
   "short_name": "Nutri",
-  "description": "Scan food barcodes to understand nutrition",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0b0b0b",
