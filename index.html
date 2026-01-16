@@ -162,10 +162,14 @@ footer{
 
 <div id="home" class="card screen">
   <h3>What is Nutri Score?</h3>
+  <p>
+    Nutri Score represents the overall nutritional quality of a food product
+    based on nutrition and ingredient analysis.
+  </p>
   <ul>
-    <li>🟢 70–100 → Healthy</li>
-    <li>🟡 40–69 → Moderate</li>
-    <li>🔴 0–39 → Unhealthy</li>
+    <li>🟢 <b>70–100</b> → Healthy</li>
+    <li>🟡 <b>40–69</b> → Moderate</li>
+    <li>🔴 <b>0–39</b> → Unhealthy</li>
   </ul>
 </div>
 
@@ -186,100 +190,169 @@ function openTab(id){
   document.querySelectorAll('#home,#overview,#nutrition,#ingredients')
     .forEach(d=>d.classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
+  [...document.querySelectorAll('.tab')]
+    .find(t=>t.textContent.toLowerCase().includes(id))
+    .classList.add('active');
+  window.scrollTo({top:0,behavior:"smooth"});
 }
 
+/* CAMERA SCAN */
 let stream=null;
 async function startScan(){
-  if(!('BarcodeDetector'in window)){alert("Camera not supported");return;}
+  if(!('BarcodeDetector'in window)){
+    alert("Camera scan not supported");
+    return;
+  }
   const v=document.getElementById("video");
   v.style.display="block";
   stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
-  v.srcObject=stream;await v.play();
+  v.srcObject=stream;
+  await v.play();
   const d=new BarcodeDetector({formats:["ean_13","ean_8","upc_a","upc_e"]});
   (async function scan(){
     const c=await d.detect(v);
-    if(c.length){barcode.value=c[0].rawValue;stopScan();}
-    else requestAnimationFrame(scan);
+    if(c.length){
+      barcode.value=c[0].rawValue;
+      stopScan();
+    }else requestAnimationFrame(scan);
   })();
 }
 function stopScan(){
-  video.style.display="none";
+  const v=document.getElementById("video");
+  v.style.display="none";
   if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
-}
-
-/* FIND OTHER BRAND PRODUCT */
-async function getOtherBrandProduct(category){
-  if(!category) return null;
-  const url =
-    "https://world.openfoodfacts.org/cgi/search.pl?search_simple=1&action=process&json=1&page_size=5" +
-    "&tagtype_0=categories&tag_contains_0=contains&tag_0=" + encodeURIComponent(category) +
-    "&nutriments.sugars_100g=lt:5";
-  try{
-    const res=await fetch(url);
-    const data=await res.json();
-    if(data.products && data.products.length>0){
-      return data.products[0].product_name || data.products[0].brands || null;
-    }
-  }catch(e){}
-  return null;
 }
 
 /* MAIN LOGIC */
 async function checkFood(){
   const code=barcode.value.trim();
   if(!code){alert("Enter barcode");return;}
+
   openTab('overview');
 
   const r=await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
   const d=await r.json();
-  if(!d.product){overview.innerHTML="❌ Product not found";return;}
+  if(!d.product){
+    overview.innerHTML="❌ Product not found";
+    return;
+  }
 
-  const p=d.product,n=p.nutriments||{};
-  const sugar=n.sugars_100g??0,fat=n.saturated_fat_100g??0,fiber=n.fiber_100g??0,energy=n.energy_kcal_100g??0;
+  const p=d.product;
+  const n=p.nutriments||{};
+  const ing=p.ingredients_text||"Ingredients not available";
 
-  let score=100,good=[],bad=[],suggestions=[];
-  if(sugar>8){score-=60;bad.push("High sugar");suggestions.push("Limit sugary foods");}
-  if(fat>5){score-=25;bad.push("High saturated fat");suggestions.push("Prefer low-fat foods");}
-  if(fiber<2){score-=15;bad.push("Low fiber");suggestions.push("Choose fiber-rich foods");}
+  const sugar=n.sugars_100g ?? null;
+  const fat=n.saturated_fat_100g ?? null;
+  const fiber=n.fiber_100g ?? null;
+  const energy=n.energy_kcal_100g ?? null;
+
+  let score=100;
+  let good=[],bad=[],suggestions=[];
+
+  if(sugar!==null && sugar>8){
+    score-=60;
+    bad.push("High sugar");
+    suggestions.push("Limit sugary foods and drinks");
+  }
+  if(fat!==null && fat>5){
+    score-=25;
+    bad.push("High saturated fat");
+    suggestions.push("Prefer low-fat options");
+  }
+  if(fiber!==null && fiber<2){
+    score-=15;
+    bad.push("Low fiber");
+    suggestions.push("Choose fiber-rich foods");
+  }
+  if(p.categories && p.categories.toLowerCase().includes("beverage")){
+    score-=20;
+    bad.push("Sugary beverage");
+    suggestions.push("Avoid frequent consumption");
+  }
+
+  if(fiber!==null && fiber>=3) good.push("Good fiber content");
+  if(sugar!==null && sugar<=5) good.push("Low sugar");
 
   score=Math.max(0,Math.min(100,score));
-  let cls="healthy",label="Healthy";
-  if(score<40){cls="unhealthy";label="Unhealthy";}
-  else if(score<70){cls="moderate";label="Moderate";}
 
-  let otherBrand=null;
+  let cls="healthy",label="Healthy choice";
+  if(score<40){cls="unhealthy";label="Unhealthy choice"}
+  else if(score<70){cls="moderate";label="Consume in moderation"}
+
+  /* BETTER BRAND */
+  let betterBrand="";
+  const cat=(p.categories||"").toLowerCase();
   if(score<40){
-    otherBrand=await getOtherBrandProduct(p.categories);
+    if(cat.includes("beverage")) betterBrand="Low-sugar or zero-sugar variant from another brand";
+    else if(cat.includes("biscuit")) betterBrand="Whole-wheat or oats biscuit from another brand";
+    else if(cat.includes("snack")) betterBrand="Baked or low-fat snack alternative";
+    else betterBrand="Healthier alternative from the same category";
   }
 
   overview.innerHTML=`
     <div class="score ${cls}">${score}</div>
-    <div style="text-align:center"><b>${p.product_name}</b><br>${label}</div>
+    <div style="text-align:center"><b>${p.product_name||"Food Item"}</b><br>${label}</div>
 
-    <h4 class="bad">😟 Issues</h4>
-    <ul>${bad.map(b=>`<li>${b}</li>`).join("")}</ul>
+    <h4 class="good">🙂 What We Like</h4>
+    <ul>${good.length?good.map(x=>`<li>${x}</li>`).join(""):"<li>No significant nutritional benefits</li>"}</ul>
+
+    <h4 class="bad">😟 What Concerns Us</h4>
+    <ul>${bad.length?bad.map(x=>`<li>${x}</li>`).join(""):"<li>No major concerns</li>"}</ul>
 
     <h4>💡 Suggestions</h4>
-    <ul>${suggestions.map(s=>`<li>${s}</li>`).join("")}</ul>
+    <ul>${suggestions.length?suggestions.map(s=>`<li>${s}</li>`).join(""):"<li>Consume in moderation</li>"}</ul>
 
-    ${otherBrand?`
-      <h4 style="color:#ffa726">🔁 Better Alternative (Other Brand)</h4>
-      <p><b>${otherBrand}</b><br>
-      <span style="color:var(--muted);font-size:13px">
-      Selected automatically from Open Food Facts with lower sugar
-      </span></p>`:""}
+    ${betterBrand?`<h4 style="color:#ffa726">🔁 Better Alternative</h4><p><b>${betterBrand}</b></p>`:""}
   `;
+
+  /* INGREDIENT THINKING */
+  let harmful=[], caution=[], safe=[];
+  const txt=ing.toLowerCase();
+
+  ["aspartame","hfcs","high fructose","e150d","msg"].forEach(i=>{
+    if(txt.includes(i)) harmful.push(i);
+  });
+  ["preservative","artificial","emulsifier","stabilizer","sweetener"].forEach(i=>{
+    if(txt.includes(i)) caution.push(i);
+  });
+  if(!harmful.length && !caution.length) safe.push("No high-risk additives detected");
 
   nutrition.innerHTML=`
     <details open><summary>Energy</summary>
-    <div class="row"><span>Energy</span><span>${energy} kcal</span></div>
+      <div class="row"><span>Energy</span><span class="value mid">${energy??"N/A"} kcal</span></div>
+    </details>
+    <details><summary>Total Sugars</summary>
+      <div class="row"><span>Sugars</span><span class="value bad">${sugar??"N/A"} g</span></div>
+    </details>
+    <details><summary>Saturated Fat</summary>
+      <div class="row"><span>Fat</span><span class="value bad">${fat??"N/A"} g</span></div>
+    </details>
+    <details><summary>Dietary Fiber</summary>
+      <div class="row"><span>Fiber</span><span class="value good">${fiber??"N/A"} g</span></div>
     </details>
   `;
 
-  ingredients.innerHTML=`<p>${p.ingredients_text||"Not available"}</p>`;
+  ingredients.innerHTML=`
+    <p>${ing}</p>
+
+    <h4>🧪 Ingredient Risk Analysis</h4>
+
+    <p class="bad"><b>❌ Harmful if consumed regularly</b></p>
+    <ul>${harmful.length?harmful.map(h=>`<li>${h}</li>`).join(""):"<li>None detected</li>"}</ul>
+
+    <p class="value mid"><b>⚠️ Consume in moderation</b></p>
+    <ul>${caution.length?caution.map(c=>`<li>${c}</li>`).join(""):"<li>None detected</li>"}</ul>
+
+    <p class="good"><b>✅ Generally safe</b></p>
+    <ul>${safe.length?safe.map(s=>`<li>${s}</li>`).join(""):"<li>Basic food ingredients</li>"}</ul>
+
+    <p style="color:var(--muted);font-size:12px">
+      Ingredient analysis is indicative and based on known food additive research.
+    </p>
+  `;
 }
 
-if('serviceWorker'in navigator){
+if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js');
 }
 </script>
