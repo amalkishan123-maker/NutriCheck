@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nutri</title>
 
-
 <link rel="manifest" href="manifest.json">
 
 <style>
@@ -199,6 +198,7 @@ function openTab(id){
   window.scrollTo({top:0,behavior:"smooth"});
 }
 
+/* CAMERA SCAN */
 let stream=null;
 async function startScan(){
   if(!('BarcodeDetector'in window)){
@@ -225,6 +225,28 @@ function stopScan(){
   if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
 }
 
+/* 🔁 FIND BETTER BRAND (DYNAMIC) */
+async function findBetterBrand(category, currentSugar, currentFiber){
+  if(!category) return null;
+
+  const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=&search_simple=1&action=process&page_size=15&json=1&tagtype_0=categories&tag_contains_0=contains&tag_0=${encodeURIComponent(category)}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  if(!data.products) return null;
+
+  for(const prod of data.products){
+    const n = prod.nutriments || {};
+    const sugar = n.sugars_100g ?? 999;
+    const fiber = n.fiber_100g ?? 0;
+
+    if(sugar < currentSugar || fiber > currentFiber){
+      return prod.product_name || null;
+    }
+  }
+  return null;
+}
+
+/* FOOD CHECK */
 async function checkFood(){
   const code=barcode.value.trim();
   if(!code){alert("Enter barcode");return;}
@@ -241,6 +263,7 @@ async function checkFood(){
   const p=d.product;
   const n=p.nutriments||{};
   const ing=p.ingredients_text||"Ingredients not available";
+  const category = p.categories?.split(",")[0] || "";
 
   const sugar=n.sugars_100g ?? null;
   const fat=n.saturated_fat_100g ?? null;
@@ -255,19 +278,16 @@ async function checkFood(){
     bad.push("High sugar");
     suggestions.push("Limit sugary foods and drinks");
   }
-
   if(fat!==null && fat>5){
     score-=25;
     bad.push("High saturated fat");
     suggestions.push("Prefer low-fat options");
   }
-
   if(fiber!==null && fiber<2){
     score-=15;
     bad.push("Low fiber");
     suggestions.push("Choose fiber-rich foods");
   }
-
   if(p.categories && p.categories.toLowerCase().includes("beverages")){
     score-=20;
     bad.push("Sugary beverage");
@@ -296,6 +316,13 @@ async function checkFood(){
     <h4>💡 Suggestions</h4>
     <ul>${suggestions.length?suggestions.map(s=>`<li>${s}</li>`).join(""):"<li>Consume in moderation</li>"}</ul>
   `;
+
+  if(score < 70){
+    const better = await findBetterBrand(category, sugar ?? 999, fiber ?? 0);
+    overview.innerHTML += better
+      ? `<h4>🔁 Better Brand Suggestion</h4><p><b>${better}</b></p>`
+      : `<h4>🔁 Better Brand Suggestion</h4><p style="color:var(--muted)">No healthier alternative found.</p>`;
+  }
 
   nutrition.innerHTML=`
     <details open><summary>Energy</summary>
