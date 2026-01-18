@@ -230,22 +230,21 @@ async function checkFood(){
 
   openTab('overview');
 
-  const r=await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
-  const d=await r.json();
-  if(!d.product){
-    overview.innerHTML="❌ Product not found";
-    return;
-  }
+  const r = await fetch(`http://localhost:4000/api/check/${code}`);
+  if(d.error){
+  overview.innerHTML="❌ Product not found";
+  return;
+}
+const p = {
+  product_name: d.productName
+};
 
-  const p=d.product;
-  const n=p.nutriments||{};
-  const ing=p.ingredients_text||"Ingredients not available";
-
-  const sugar=n.sugars_100g ?? null;
-  const fat=n.saturated_fat_100g ?? null;
-  const fiber=n.fiber_100g ?? null;
-  const energy=n.energy_kcal_100g ?? null;
-
+const sugar = d.sugar ?? null;
+const fat = d.fat ?? null;
+const fiber = d.fiber ?? null;
+const energy = d.energy ?? null;
+const ing = d.ingredients ?? "Ingredients not available";
+const betterBrand = d.alternativeBrand ?? "";
   let score=100;
   let good=[],bad=[],suggestions=[];
 
@@ -279,15 +278,7 @@ async function checkFood(){
   if(score<40){cls="unhealthy";label="Unhealthy choice"}
   else if(score<70){cls="moderate";label="Consume in moderation"}
 
-  /* BETTER BRAND */
-  let betterBrand="";
-  const cat=(p.categories||"").toLowerCase();
-  if(score<40){
-    if(cat.includes("beverage")) betterBrand="Low-sugar or zero-sugar variant from another brand";
-    else if(cat.includes("biscuit")) betterBrand="Whole-wheat or oats biscuit from another brand";
-    else if(cat.includes("snack")) betterBrand="Baked or low-fat snack alternative";
-    else betterBrand="Healthier alternative from the same category";
-  }
+
 
   overview.innerHTML=`
     <div class="score ${cls}">${score}</div>
