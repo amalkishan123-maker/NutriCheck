@@ -293,7 +293,25 @@ const betterBrand = d.alternativeBrand ?? "";
     <ul>${suggestions.length?suggestions.map(s=>`<li>${s}</li>`).join(""):"<li>Consume in moderation</li>"}</ul>
 
     ${betterBrand?`<h4 style="color:#ffa726">🔁 Better Alternative</h4><p><b>${betterBrand}</b></p>`:""}
-  `;
+  `; 
+  
+  nutrition.innerHTML = `
+  <details open><summary>Energy</summary>
+    <div class="row"><span>Energy</span><span class="value mid">${energy ?? "N/A"} kcal</span></div>
+  </details>
+
+  <details><summary>Total Sugars</summary>
+    <div class="row"><span>Sugars</span><span class="value bad">${sugar ?? "N/A"} g</span></div>
+  </details>
+
+  <details><summary>Saturated Fat</summary>
+    <div class="row"><span>Fat</span><span class="value bad">${fat ?? "N/A"} g</span></div>
+  </details>
+
+  <details><summary>Dietary Fiber</summary>
+    <div class="row"><span>Fiber</span><span class="value good">${fiber ?? "N/A"} g</span></div>
+  </details>
+`;
 
   /* INGREDIENT  */
 
