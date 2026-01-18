@@ -229,12 +229,15 @@ async function checkFood(){
   if(!code){alert("Enter barcode");return;}
 
   openTab('overview');
+const r = await fetch(`http://localhost:4000/api/check/${code}`);
+const d = await r.json();
 
-  const r = await fetch(`http://localhost:4000/api/check/${code}`);
-  if(d.error){
-  overview.innerHTML="❌ Product not found";
+if(d.error){
+  overview.innerHTML = "❌ Product not found";
   return;
 }
+ 
+
 const p = {
   product_name: d.productName
 };
@@ -263,11 +266,7 @@ const betterBrand = d.alternativeBrand ?? "";
     bad.push("Low fiber");
     suggestions.push("Choose fiber-rich foods");
   }
-  if(p.categories && p.categories.toLowerCase().includes("beverage")){
-    score-=20;
-    bad.push("Sugary beverage");
-    suggestions.push("Avoid frequent consumption");
-  }
+ 
 
   if(fiber!==null && fiber>=3) good.push("Good fiber content");
   if(sugar!==null && sugar<=5) good.push("Low sugar");
@@ -296,53 +295,15 @@ const betterBrand = d.alternativeBrand ?? "";
     ${betterBrand?`<h4 style="color:#ffa726">🔁 Better Alternative</h4><p><b>${betterBrand}</b></p>`:""}
   `;
 
-  /* INGREDIENT THINKING */
-  let harmful=[], caution=[], safe=[];
-  const txt=ing.toLowerCase();
+  /* INGREDIENT  */
 
-  ["aspartame","hfcs","high fructose","e150d","msg"].forEach(i=>{
-    if(txt.includes(i)) harmful.push(i);
-  });
-  ["preservative","artificial","emulsifier","stabilizer","sweetener"].forEach(i=>{
-    if(txt.includes(i)) caution.push(i);
-  });
-  if(!harmful.length && !caution.length) safe.push("No high-risk additives detected");
-
-  nutrition.innerHTML=`
-    <details open><summary>Energy</summary>
-      <div class="row"><span>Energy</span><span class="value mid">${energy??"N/A"} kcal</span></div>
-    </details>
-    <details><summary>Total Sugars</summary>
-      <div class="row"><span>Sugars</span><span class="value bad">${sugar??"N/A"} g</span></div>
-    </details>
-    <details><summary>Saturated Fat</summary>
-      <div class="row"><span>Fat</span><span class="value bad">${fat??"N/A"} g</span></div>
-    </details>
-    <details><summary>Dietary Fiber</summary>
-      <div class="row"><span>Fiber</span><span class="value good">${fiber??"N/A"} g</span></div>
-    </details>
-  `;
-
-  ingredients.innerHTML=`
-    <p>${ing}</p>
-
-    <h4>🧪 Ingredient Risk Analysis</h4>
-
-    <p class="bad"><b>❌ Harmful if consumed regularly</b></p>
-    <ul>${harmful.length?harmful.map(h=>`<li>${h}</li>`).join(""):"<li>None detected</li>"}</ul>
-
-    <p class="value mid"><b>⚠️ Consume in moderation</b></p>
-    <ul>${caution.length?caution.map(c=>`<li>${c}</li>`).join(""):"<li>None detected</li>"}</ul>
-
-    <p class="good"><b>✅ Generally safe</b></p>
-    <ul>${safe.length?safe.map(s=>`<li>${s}</li>`).join(""):"<li>Basic food ingredients</li>"}</ul>
-
-    <p style="color:var(--muted);font-size:12px">
-      Ingredient analysis is indicative and based on known food additive research.
-    </p>
-  `;
-}
-
+  ingredients.innerHTML = `
+  <p>${ing}</p>
+  <p style="color:var(--muted);font-size:12px">
+    Ingredient analysis provided by backend.
+  </p>
+`;
+ 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js');
 }
