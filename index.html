@@ -3,10 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nutri</title>
-
-<link rel="manifest" href="manifest.json">
-
+<title>Nutri - Smart Food Scanner</title>
 <style>
 :root{
   --bg:#0b0b0b;
@@ -21,268 +18,276 @@
 *{box-sizing:border-box}
 body{
   margin:0;
-  font-family:Arial,Helvetica,sans-serif;
+  font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background:var(--bg);
   color:var(--text);
+  line-height: 1.5;
 }
 
-.container{
-  max-width:460px;
-  margin:auto;
-  padding:16px;
-}
-
-h1{color:var(--green);margin:4px 0}
+.container{ max-width:460px; margin:auto; padding:16px; }
+h1{color:var(--green);margin:4px 0; font-size: 28px;}
 .tagline{color:var(--muted);font-size:14px;margin-bottom:12px}
 
 .card{
   background:var(--card);
-  border-radius:14px;
-  padding:14px;
+  border-radius:18px;
+  padding:18px;
   margin-bottom:14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
-.screen{
-  animation:slideFade .35s ease;
+/* Video Scanner UI */
+#videoContainer {
+  position: relative;
+  width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  display: none;
+  margin-bottom: 12px;
 }
-
-@keyframes slideFade{
-  from{opacity:0;transform:translateX(12px)}
-  to{opacity:1;transform:translateX(0)}
+.scan-region {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70%; height: 50%;
+  border: 2px solid var(--green);
+  border-radius: 12px;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.6);
+  pointer-events: none;
+}
+.scan-line {
+  position: absolute;
+  width: 100%; height: 2px;
+  background: var(--green);
+  top: 0;
+  animation: moveLine 2s infinite linear;
+}
+@keyframes moveLine { 
+  0% { top: 0; } 50% { top: 100%; } 100% { top: 0; } 
 }
 
 input{
-  width:100%;
-  padding:12px;
-  font-size:16px;
-  border-radius:10px;
-  border:none;
-  background:#1f1f1f;
-  color:#fff;
-  margin-bottom:10px;
+  width:100%; padding:14px; font-size:16px; border-radius:12px;
+  border:2px solid #222; background:#1f1f1f; color:#fff; margin-bottom:12px;
 }
+input:focus { border-color: var(--green); outline: none; }
 
 button{
-  width:100%;
-  padding:13px;
-  border:none;
-  border-radius:10px;
-  font-weight:bold;
-  cursor:pointer;
+  width:100%; padding:14px; border:none; border-radius:12px;
+  font-weight:bold; cursor:pointer; font-size: 15px; transition: 0.2s;
 }
+.scanBtn{background:#2a2a2a; color:#fff; margin-bottom:8px}
+.checkBtn{background:var(--green); color:#000}
+button:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.scanBtn{background:#222;color:#fff;margin-bottom:8px}
-.checkBtn{background:var(--green);color:#000}
-
-.tabs{
-  display:flex;
-  gap:6px;
-  margin-bottom:12px;
-}
+.tabs{ display:flex; gap:6px; margin-bottom:16px; overflow-x: auto; }
 .tab{
-  flex:1;
-  text-align:center;
-  padding:10px;
-  border-radius:10px;
-  background:#1f1f1f;
-  color:#bbb;
-  cursor:pointer;
+  flex:1; text-align:center; padding:10px 4px; border-radius:10px;
+  background:#1f1f1f; color:#888; cursor:pointer; font-size: 13px;
 }
-.tab.active{
-  background:var(--green);
-  color:#000;
-  font-weight:bold;
-}
+.tab.active{ background:var(--green); color:#000; font-weight:bold; }
 
 .score{
-  width:120px;
-  height:120px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:34px;
-  margin:12px auto;
+  width:100px; height:100px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:32px; margin:12px auto; font-weight: 800;
 }
-.healthy{background:#1b5e20}
-.moderate{background:#f9a825;color:#000}
-.unhealthy{background:#8e0000}
+.healthy{background:#1b5e20; border: 4px solid #4caf50;}
+.moderate{background:#f9a825; color:#000; border: 4px solid #ffd54f;}
+.unhealthy{background:#8e0000; border: 4px solid #ef5350;}
 
-.good{color:#66bb6a}
-.bad{color:#ef5350}
-
-details{
-  background:#111;
-  border-radius:10px;
-  padding:10px;
-  margin-bottom:8px;
-}
-details summary{cursor:pointer;font-weight:bold}
-
-.row{
-  display:flex;
-  justify-content:space-between;
-  padding:8px 0;
-}
-
-.value.good{color:#66bb6a}
-.value.mid{color:#ffb74d}
-.value.bad{color:#ef5350}
+/* Data Tables */
+.nutri-table { width: 100%; border-collapse: collapse; }
+.nutri-table td { padding: 12px 0; border-bottom: 1px solid #222; }
+.val-badge { padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 14px; }
+.val-bad { color: var(--red); }
+.val-mid { color: var(--yellow); }
+.val-good { color: var(--green); }
 
 .hidden{display:none}
-
-footer{
-  text-align:center;
-  font-size:12px;
-  color:#888;
-  margin-top:12px;
-}
+.screen{ animation:fadeIn .3s ease; }
+@keyframes fadeIn{ from{opacity:0} to{opacity:1} }
 </style>
 </head>
 
 <body>
 <div class="container">
+  <h1>Nutri</h1>
+  <div class="tagline">Scan · Understand · Decide</div>
 
-<h1>Nutri</h1>
-<div class="tagline">Scan · Understand · Decide</div>
+  <div class="card">
+    <div id="videoContainer">
+      <video id="video" style="width:100%"></video>
+      <div class="scan-region"><div class="scan-line"></div></div>
+    </div>
+    <input id="barcode" type="number" placeholder="Enter barcode number">
+    <button id="scanBtn" class="scanBtn" onclick="toggleScan()">📷 Scan Barcode</button>
+    <button id="checkBtn" class="checkBtn" onclick="checkFood()">Check Food</button>
+  </div>
 
-<div class="card">
-  <input id="barcode" placeholder="Enter barcode number">
-  <button class="scanBtn" onclick="startScan()">📷 Scan Barcode</button>
-  <button class="checkBtn" onclick="checkFood()">Check Food</button>
-  <video id="video" style="width:100%;border-radius:10px;display:none"></video>
-</div>
+  <div class="tabs">
+    <div class="tab active" onclick="openTab('overview', this)">Overview</div>
+    <div class="tab" onclick="openTab('nutrition', this)">Nutrition</div>
+    <div class="tab" onclick="openTab('ingredients', this)">Ingredients</div>
+  </div>
 
-<div class="tabs">
-  <div class="tab active" onclick="openTab('home')">Home</div>
-  <div class="tab" onclick="openTab('overview')">Overview</div>
-  <div class="tab" onclick="openTab('nutrition')">Nutrition</div>
-  <div class="tab" onclick="openTab('ingredients')">Ingredients</div>
-</div>
+  <div id="overview" class="card screen">
+    <p style="text-align:center; color:var(--muted)">Scan a product to see details</p>
+  </div>
 
-<div id="home" class="card screen">
-  <h3>What is Nutri Score?</h3>
-  <ul>
-    <li>🟢 70–100 → Healthy</li>
-    <li>🟡 40–69 → Moderate</li>
-    <li>🔴 0–39 → Unhealthy</li>
-  </ul>
-</div>
+  <div id="nutrition" class="card screen hidden"></div>
+  <div id="ingredients" class="card screen hidden"></div>
 
-<div id="overview" class="card hidden screen"></div>
-<div id="nutrition" class="card hidden screen"></div>
-<div id="ingredients" class="card hidden screen"></div>
-
-<footer>
-  Data source: Open Food Facts<br>
-  Results are indicative, not medical advice
-</footer>
-
+  <footer style="text-align:center; font-size:11px; color:#555; padding: 20px 0;">
+    Data: Open Food Facts API | Not Medical Advice
+  </footer>
 </div>
 
 <script>
-function openTab(id){
+let stream = null;
+const barcodeInput = document.getElementById("barcode");
+const checkBtn = document.getElementById("checkBtn");
+
+function openTab(id, el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('#home,#overview,#nutrition,#ingredients')
-    .forEach(d=>d.classList.add('hidden'));
+  document.querySelectorAll('.screen').forEach(d=>d.classList.add('hidden'));
+  el.classList.add('active');
   document.getElementById(id).classList.remove('hidden');
 }
 
-let stream=null;
-async function startScan(){
-  if(!('BarcodeDetector'in window)){alert("Camera not supported");return;}
-  const v=document.getElementById("video");
-  v.style.display="block";
-  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
-  v.srcObject=stream;await v.play();
-  const d=new BarcodeDetector({formats:["ean_13","ean_8","upc_a","upc_e"]});
-  (async function scan(){
-    const c=await d.detect(v);
-    if(c.length){barcode.value=c[0].rawValue;stopScan();}
-    else requestAnimationFrame(scan);
-  })();
-}
-function stopScan(){
-  video.style.display="none";
-  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
-}
-
-/* FIND OTHER BRAND PRODUCT */
-async function getOtherBrandProduct(category){
-  if(!category) return null;
-  const url =
-    "https://world.openfoodfacts.org/cgi/search.pl?search_simple=1&action=process&json=1&page_size=5" +
-    "&tagtype_0=categories&tag_contains_0=contains&tag_0=" + encodeURIComponent(category) +
-    "&nutriments.sugars_100g=lt:5";
-  try{
-    const res=await fetch(url);
-    const data=await res.json();
-    if(data.products && data.products.length>0){
-      return data.products[0].product_name || data.products[0].brands || null;
+async function toggleScan() {
+  const container = document.getElementById("videoContainer");
+  const btn = document.getElementById("scanBtn");
+  
+  if (stream) {
+    stopScan();
+    btn.innerText = "📷 Scan Barcode";
+  } else {
+    if(!('BarcodeDetector' in window)) {
+      alert("Barcode detection not supported on this browser.");
+      return;
     }
-  }catch(e){}
-  return null;
-}
-
-/* MAIN LOGIC */
-async function checkFood(){
-  const code=barcode.value.trim();
-  if(!code){alert("Enter barcode");return;}
-  openTab('overview');
-
-  const r=await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
-  const d=await r.json();
-  if(!d.product){overview.innerHTML="❌ Product not found";return;}
-
-  const p=d.product,n=p.nutriments||{};
-  const sugar=n.sugars_100g??0,fat=n.saturated_fat_100g??0,fiber=n.fiber_100g??0,energy=n.energy_kcal_100g??0;
-
-  let score=100,good=[],bad=[],suggestions=[];
-  if(sugar>8){score-=60;bad.push("High sugar");suggestions.push("Limit sugary foods");}
-  if(fat>5){score-=25;bad.push("High saturated fat");suggestions.push("Prefer low-fat foods");}
-  if(fiber<2){score-=15;bad.push("Low fiber");suggestions.push("Choose fiber-rich foods");}
-
-  score=Math.max(0,Math.min(100,score));
-  let cls="healthy",label="Healthy";
-  if(score<40){cls="unhealthy";label="Unhealthy";}
-  else if(score<70){cls="moderate";label="Moderate";}
-
-  let otherBrand=null;
-  if(score<40){
-    otherBrand=await getOtherBrandProduct(p.categories);
+    container.style.display = "block";
+    btn.innerText = "🛑 Stop Camera";
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+      video.srcObject = stream;
+      await video.play();
+      
+      const detector = new BarcodeDetector({formats: ["ean_13", "ean_8", "upc_a"]});
+      const scanLoop = async () => {
+        if (!stream) return;
+        const codes = await detector.detect(video);
+        if (codes.length > 0) {
+          barcodeInput.value = codes[0].rawValue;
+          stopScan();
+          btn.innerText = "📷 Scan Barcode";
+          checkFood();
+        } else {
+          requestAnimationFrame(scanLoop);
+        }
+      };
+      scanLoop();
+    } catch (err) { alert("Camera access denied"); stopScan(); }
   }
-
-  overview.innerHTML=`
-    <div class="score ${cls}">${score}</div>
-    <div style="text-align:center"><b>${p.product_name}</b><br>${label}</div>
-
-    <h4 class="bad">😟 Issues</h4>
-    <ul>${bad.map(b=>`<li>${b}</li>`).join("")}</ul>
-
-    <h4>💡 Suggestions</h4>
-    <ul>${suggestions.map(s=>`<li>${s}</li>`).join("")}</ul>
-
-    ${otherBrand?`
-      <h4 style="color:#ffa726">🔁 Better Alternative (Other Brand)</h4>
-      <p><b>${otherBrand}</b><br>
-      <span style="color:var(--muted);font-size:13px">
-      Selected automatically from Open Food Facts with lower sugar
-      </span></p>`:""}
-  `;
-
-  nutrition.innerHTML=`
-    <details open><summary>Energy</summary>
-    <div class="row"><span>Energy</span><span>${energy} kcal</span></div>
-    </details>
-  `;
-
-  ingredients.innerHTML=`<p>${p.ingredients_text||"Not available"}</p>`;
 }
 
-if('serviceWorker'in navigator){
-  navigator.serviceWorker.register('service-worker.js');
+function stopScan() {
+  document.getElementById("videoContainer").style.display = "none";
+  if(stream) stream.getTracks().forEach(t=>t.stop());
+  stream = null;
+}
+
+async function checkFood() {
+  const code = barcodeInput.value.trim();
+  if(!code) return;
+
+  checkBtn.disabled = true;
+  checkBtn.innerText = "Searching...";
+  openTab('overview', document.querySelector('.tab'));
+
+  try {
+    const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
+    const data = await res.json();
+    
+    if(!data.product) {
+      document.getElementById('overview').innerHTML = "❌ Product not found.";
+      return;
+    }
+
+    renderProduct(data.product);
+  } catch (e) {
+    document.getElementById('overview').innerHTML = "⚠️ Error connecting to database.";
+  } finally {
+    checkBtn.disabled = false;
+    checkBtn.innerText = "Check Food";
+  }
+}
+
+function renderProduct(p) {
+  const n = p.nutriments || {};
+  const sugar = n.sugars_100g || 0;
+  const fat = n.saturated_fat_100g || 0;
+  const salt = n.salt_100g || 0;
+  const fiber = n.fiber_100g || 0;
+  const energy = n.energy_kcal_100g || 0;
+
+  // Scoring Logic
+  let score = 100;
+  let issues = [];
+  if(sugar > 15) { score -= 40; issues.push("Very high sugar"); }
+  else if(sugar > 5) { score -= 15; issues.push("Moderate sugar"); }
+  if(fat > 5) { score -= 20; issues.push("High saturated fat"); }
+  if(salt > 1.5) { score -= 20; issues.push("High salt content"); }
+  
+  score = Math.max(0, score);
+  const status = score > 70 ? "healthy" : (score > 40 ? "moderate" : "unhealthy");
+  const label = score > 70 ? "Great Choice" : (score > 40 ? "Eat in Moderation" : "Limit Consumption");
+
+  // Overview Tab
+  document.getElementById('overview').innerHTML = `
+    <div class="score ${status}">${score}</div>
+    <div style="text-align:center; margin-bottom:20px">
+      <h2 style="margin:0">${p.product_name || 'Unknown Product'}</h2>
+      <span style="color:var(--muted)">${p.brands || ''}</span>
+    </div>
+    <div style="background:#000; padding:12px; border-radius:12px">
+      <b style="color:${status==='healthy'?'#4caf50':'#ffb74d'}">${label}</b>
+      <ul style="margin:8px 0; padding-left:20px; font-size:14px">
+        ${issues.length ? issues.map(i=>`<li>${i}</li>`).join('') : '<li>Nutritional profile looks balanced</li>'}
+      </ul>
+    </div>
+  `;
+
+  // Nutrition Tab
+  const getCol = (v, type) => {
+    if(type==='sugar') return v > 15 ? 'val-bad' : (v > 5 ? 'val-mid' : 'val-good');
+    if(type==='fat') return v > 5 ? 'val-bad' : (v > 1.5 ? 'val-mid' : 'val-good');
+    return '';
+  };
+
+  document.getElementById('nutrition').innerHTML = `
+    <h3>Per 100g/ml</h3>
+    <table class="nutri-table">
+      <tr><td>Energy</td><td align="right">${energy} kcal</td></tr>
+      <tr><td>Sugars</td><td align="right" class="${getCol(sugar,'sugar')}">${sugar}g</td></tr>
+      <tr><td>Sat. Fat</td><td align="right" class="${getCol(fat,'fat')}">${fat}g</td></tr>
+      <tr><td>Salt</td><td align="right">${salt}g</td></tr>
+      <tr><td>Dietary Fiber</td><td align="right">${fiber}g</td></tr>
+    </table>
+  `;
+
+  // Ingredients Tab
+  const additives = ["palm oil", "syrup", "flavor enhancer", "color"];
+  const found = additives.filter(a => p.ingredients_text?.toLowerCase().includes(a));
+  
+  document.getElementById('ingredients').innerHTML = `
+    <p style="font-size:14px; color:#ccc">${p.ingredients_text || "No ingredient list available."}</p>
+    ${found.length ? `<div style="margin-top:15px; border-top:1px solid #333; pt:10px">
+      <small style="color:var(--yellow)">⚠️ Flagged: ${found.join(', ')}</small>
+    </div>` : ''}
+  `;
 }
 </script>
-
 </body>
 </html>
