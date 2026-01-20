@@ -3,17 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nutri - Smart Food Scanner</title>
+<title>Nutri Premium - Bio-Chemical Scanner</title>
 <style>
 :root{
-  --bg:#0b0b0b;
-  --card:#141414;
+  --bg:#050505;
+  --card:#111111;
   --green:#4caf50;
   --text:#ffffff;
-  --muted:#9e9e9e;
-  --red:#ef5350;
-  --yellow:#ffb74d;
-  --premium-glow: rgba(76, 175, 80, 0.15);
+  --muted:#777777;
+  --red:#ff5252;
+  --yellow:#ffd740;
+  --premium-glow: rgba(76, 175, 80, 0.2);
 }
 
 *{box-sizing:border-box}
@@ -22,94 +22,105 @@ body{
   font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background:var(--bg);
   color:var(--text);
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 .container{ max-width:460px; margin:auto; padding:16px; }
-h1{color:var(--green);margin:4px 0; font-size: 28px; letter-spacing: -1px;}
-.tagline{color:var(--muted);font-size:14px;margin-bottom:12px}
+h1{color:var(--green); margin:0; font-size: 26px; letter-spacing: -1.5px; font-weight: 900;}
+.tagline{color:var(--muted); font-size:12px; margin-bottom:15px; text-transform: uppercase; letter-spacing: 2px;}
 
 .card{
   background:var(--card);
-  border-radius:22px;
+  border-radius:24px;
   padding:20px;
   margin-bottom:14px;
-  border: 1px solid #222;
+  border: 1px solid #1f1f1f;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 
 /* Premium Scoring UI */
-.score-container {
-    position: relative;
-    width: 120px;
-    height: 120px;
-    margin: 20px auto;
+.score-flex { display: flex; align-items: center; justify-content: space-around; margin: 15px 0; }
+.score-circle {
+  width: 100px; height: 100px; border-radius: 50%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-size: 32px; font-weight: 900;
+  background: radial-gradient(circle at center, #1a1a1a, #000);
+  border: 3px solid #222;
 }
+.score-circle span { font-size: 9px; color: var(--muted); text-transform: uppercase; }
 
-.score{
-  width: 100%; height: 100%; border-radius:50%;
-  display:flex; flex-direction: column; align-items:center; justify-content:center;
-  font-size:36px; font-weight: 800;
-  box-shadow: 0 0 30px var(--premium-glow);
-  transition: 0.5s ease;
-}
-
-.score span { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; margin-top: -4px; }
-
-/* Alert Boxes */
-.alert-box {
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 14px;
-    padding: 16px;
-    margin-top: 15px;
-}
+/* Analysis Sections */
+.analysis-header { font-size: 11px; color: var(--muted); letter-spacing: 1.5px; margin-bottom: 12px; border-bottom: 1px solid #222; padding-bottom: 5px; }
 
 .alert-item {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 12px;
-    border-left: 3px solid var(--red);
-    padding-left: 12px;
+  padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.02);
+  margin-bottom: 10px; border-left: 4px solid var(--red);
 }
+.alert-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 4px; }
+.alert-msg { font-size: 13px; color: #ddd; margin: 0; }
+.ban-list { font-size: 11px; color: var(--red); font-weight: bold; margin-top: 5px; }
 
-.alert-item b { display: block; font-size: 13px; color: var(--red); text-transform: uppercase; }
-.alert-item p { margin: 2px 0 0 0; font-size: 13px; color: #bbb; }
+/* Eco Score UI */
+.eco-card { display: flex; align-items: center; gap: 12px; background: #000; padding: 10px; border-radius: 14px; margin-top: 15px; border: 1px solid #222; }
+.eco-grade { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 20px; }
 
-/* Visual Elements */
-#videoContainer {
-  position: relative; width: 100%; border-radius: 18px; overflow: hidden; display: none; margin-bottom: 12px;
-}
-.scan-region {
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  width: 70%; height: 50%; border: 2px solid var(--green); border-radius: 12px;
-  box-shadow: 0 0 0 9999px rgba(0,0,0,0.7); pointer-events: none;
-}
+/* Global Styles */
+.tab-row { display: flex; gap: 5px; margin-bottom: 15px; }
+.tab { flex: 1; padding: 12px; border-radius: 12px; background: #1a1a1a; color: #555; font-size: 11px; font-weight: bold; text-align: center; cursor: pointer; }
+.tab.active { background: var(--green); color: #000; }
 
-input{
-  width:100%; padding:14px; font-size:16px; border-radius:12px;
-  border:1px solid #333; background:#000; color:#fff; margin-bottom:12px;
-}
+#videoContainer { position: relative; width: 100%; border-radius: 20px; overflow: hidden; display: none; margin-bottom: 15px; border: 2px solid #333; }
+.scan-line { position: absolute; width: 100%; height: 2px; background: var(--green); top: 0; animation: scanAnim 2s infinite linear; }
+@keyframes scanAnim { 0% { top: 0; } 100% { top: 100%; } }
 
-button{ width:100%; padding:14px; border:none; border-radius:12px; font-weight:bold; cursor:pointer; }
-.scanBtn{background:#222; color:#fff; margin-bottom:8px}
-.checkBtn{background:var(--green); color:#000}
+input { width: 100%; padding: 15px; border-radius: 14px; border: 1px solid #222; background: #000; color: #fff; margin-bottom: 10px; font-size: 16px; }
+button { width: 100%; padding: 15px; border-radius: 14px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
+.main-btn { background: var(--green); color: #000; box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3); }
 
-.tabs{ display:flex; gap:8px; margin-bottom:16px; }
-.tab{
-  flex:1; text-align:center; padding:12px 4px; border-radius:12px;
-  background:#1a1a1a; color:#666; cursor:pointer; font-size: 11px; font-weight: bold; text-transform: uppercase;
-}
-.tab.active{ background:var(--green); color:#000; }
-
-.nutri-table { width: 100%; border-collapse: collapse; }
-.nutri-table td { padding: 12px 0; border-bottom: 1px solid #222; font-size: 14px; }
-.val-bad { color: var(--red); font-weight: bold; }
-.val-good { color: var(--green); font-weight: bold; }
-
-.hidden{display:none}
+.hidden { display: none; }
+.val-bad { color: var(--red); }
+.val-good { color: var(--green); }
 </style>
+</head>
+
+<body>
+<div class="container">
+  <h1>Nutri <span style="color:var(--text); font-weight: 300;">Premium</span></h1>
+  <div class="tagline">Bio-Chemical Intelligence</div>
+
+  <div class="card">
+    <div id="videoContainer">
+      <video id="video" style="width:100%"></video>
+      <div class="scan-line"></div>
+    </div>
+    <input id="barcode" type="number" placeholder="Enter barcode">
+    <button class="main-btn" id="checkBtn" onclick="checkFood()">Initiate Bio-Scan</button>
+    <button style="background:transparent; color:var(--muted); font-size:12px; margin-top:10px;" onclick="toggleScan()">Toggle Camera</button>
+  </div>
+
+  <div class="tab-row">
+    <div class="tab active" onclick="openTab('overview', this)">Overview</div>
+    <div class="tab" onclick="openTab('nutrition', this)">Bio-Data</div>
+    <div class="tab" onclick="openTab('ingredients', this)">Ledger</div>
+  </div>
+
+  <div id="overview" class="card screen">
+    <p style="text-align:center; color:var(--muted); font-size: 14px;">Ready for analysis.</p>
+  </div>
+  <div id="nutrition" class="card screen hidden"></div>
+  <div id="ingredients" class="card screen hidden"></div>
+</div>
 
 <script>
 let stream = null;
+const BAN_DATA = {
+  "titanium dioxide": "European Union (E171 banned in food).",
+  "potassium bromate": "United Kingdom, Canada, Brazil, European Union.",
+  "aspartame": "Under investigation; restricted in certain EU child-targeted foods.",
+  "red 40": "Requires warning label in EU for hyperactivity risk.",
+  "bha": "California (Prop 65), European Union (Restricted).",
+  "brominated vegetable oil": "European Union, India, Japan."
+};
 
 function openTab(id, el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -118,47 +129,41 @@ function openTab(id, el){
   document.getElementById(id).classList.remove('hidden');
 }
 
-/* CHEMICAL & PACKAGING ANALYSIS */
-function getChemicalAlerts(p) {
+function getChemicalAndBanAlerts(p) {
   const alerts = [];
   const ingredients = (p.ingredients_text || "").toLowerCase();
   const packaging = (p.packaging || "").toLowerCase();
   
-  // 1. "Forever Chemicals" (PFAS) Logic
-  // Focuses on grease-proof packaging common in certain food categories
-  const pfasPackaging = ["wrapper", "bag", "paper", "cardboard"];
-  const pfasFoods = ["popcorn", "burger", "wrap", "fast food", "bakery"];
-  
-  if (pfasPackaging.some(t => packaging.includes(t)) || pfasFoods.some(f => p.categories?.toLowerCase().includes(f))) {
+  // 1. Forever Chemicals (PFAS)
+  const pfasPackaging = ["wrapper", "bag", "box", "film"];
+  if (pfasPackaging.some(t => packaging.includes(t)) && p.categories?.toLowerCase().includes("fast food")) {
     alerts.push({
       label: "PFAS Risk",
-      msg: "Packaging type often utilizes PFAS (Forever Chemicals) for grease resistance.",
-      color: "var(--yellow)"
+      msg: "Packaging uses grease-resistant polymers (Forever Chemicals).",
+      color: "var(--yellow)",
+      bans: null
     });
   }
 
-  // 2. Controversial Chemical Additives
-  const chemicals = {
-    "titanium dioxide": "E171 - Potential DNA damage risk (Banned in EU).",
-    "aspartame": "Artificial sweetener linked to metabolic disruption.",
-    "potassium bromate": "Banned carcinogen in many regions; used in flours.",
-    "sodium nitrite": "Preservative linked to higher colon cancer risk.",
-    "bha": "Endocrine disruptor used to prevent oils from spoiling.",
-    "red 40": "Petroleum-derived dye linked to hyperactivity."
-  };
-
-  for (const [key, val] of Object.entries(chemicals)) {
-    if (ingredients.includes(key)) {
-      alerts.push({ label: "Chemical Alert", msg: val, color: "var(--red)" });
+  // 2. Chemical Bans & Controversies
+  for (const [chem, location] of Object.entries(BAN_DATA)) {
+    if (ingredients.includes(chem)) {
+      alerts.push({
+        label: "Banned / Restricted",
+        msg: `Contains ${chem.toUpperCase()}, a controversial chemical agent.`,
+        color: "var(--red)",
+        bans: `⚠️ ILLEGAL OR RESTRICTED IN: ${location}`
+      });
     }
   }
 
-  // 3. Processing level (NOVA)
+  // 3. Ultra-Processing
   if (p.nova_group === 4) {
     alerts.push({
-      label: "Ultra-Processed",
-      msg: "NOVA Group 4: Industrial formulation with high chemical load.",
-      color: "#ffb74d"
+      label: "Industrial Grade",
+      msg: "Ultra-Processed (NOVA 4). Linked to metabolic disruption.",
+      color: "var(--yellow)",
+      bans: null
     });
   }
 
@@ -170,79 +175,95 @@ async function checkFood() {
   if(!code) return;
   
   const btn = document.getElementById("checkBtn");
-  btn.innerText = "Analyzing Micro-data...";
+  btn.innerText = "Analyzing ledger...";
   btn.disabled = true;
 
   try {
     const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json`);
     const data = await res.json();
-    if(!data.product) { alert("Unknown Barcode"); return; }
+    if(!data.product) { alert("Barcode unknown in global database."); return; }
     renderProduct(data.product);
   } catch (e) {
-    alert("API Connection Error");
+    alert("Connection Error");
   } finally {
-    btn.innerText = "Check Food";
+    btn.innerText = "Initiate Bio-Scan";
     btn.disabled = false;
   }
 }
 
 function renderProduct(p) {
-  const alerts = getChemicalAlerts(p);
+  const alerts = getChemicalAndBanAlerts(p);
   const n = p.nutriments || {};
+  const eco = p.ecoscore_grade || 'unknown';
   
-  // Scoring
   let score = 100;
-  if(n.sugars_100g > 10) score -= 30;
-  if(p.nova_group === 4) score -= 25;
-  score -= (alerts.length * 10);
+  if (n.sugars_100g > 12) score -= 30;
+  if (p.nova_group === 4) score -= 20;
+  score -= (alerts.length * 12);
   score = Math.max(0, score);
 
-  const status = score > 70 ? "healthy" : (score > 40 ? "moderate" : "unhealthy");
+  const status = score > 70 ? "val-good" : (score > 40 ? "val-mid" : "val-bad");
+  const ecoColors = { a: "#4caf50", b: "#8bc34a", c: "#ffeb3b", d: "#ff9800", e: "#f44336", unknown: "#333" };
 
   // Overview Tab
   document.getElementById('overview').innerHTML = `
-    <div class="score-container">
-        <div class="score ${status}">${score}<span>Score</span></div>
+    <div class="score-flex">
+      <div class="score-circle" style="border-color:${status === 'val-good' ? '#4caf50' : '#f44336'}">
+        ${score}<span>Score</span>
+      </div>
     </div>
     
     <div style="text-align:center; margin-bottom:20px">
-      <h2 style="margin:0">${p.product_name || 'Premium Item'}</h2>
-      <div style="font-size:12px; color:var(--green); margin-top:4px; letter-spacing:1px">
-        ${p.brands ? p.brands.toUpperCase() : 'PURE GRADE'}
-      </div>
+      <h2 style="margin:0; font-size: 20px;">${p.product_name || 'Bio-Scan Result'}</h2>
+      <div style="color:var(--muted); font-size: 11px; margin-top: 5px;">${p.brands || 'N/A'}</div>
     </div>
 
-    <div class="alert-box">
-      <h4 style="margin:0 0 15px 0; font-size:12px; color:var(--muted); letter-spacing:1px">CHEMICAL & PACKAGING ANALYSIS</h4>
-      ${alerts.length > 0 ? alerts.map(a => `
-        <div class="alert-item" style="border-color:${a.color}">
-          <b style="color:${a.color}">${a.label}</b>
-          <p>${a.msg}</p>
-        </div>
-      `).join('') : '<p style="color:var(--green); font-size:13px">✓ No high-risk chemicals or PFAS packaging detected.</p>'}
+    <div class="analysis-header">CHEMICAL & BAN INTELLIGENCE</div>
+    ${alerts.map(a => `
+      <div class="alert-item" style="border-color:${a.color}">
+        <span class="alert-tag" style="color:${a.color}">${a.label}</span>
+        <p class="alert-msg">${a.msg}</p>
+        ${a.bans ? `<div class="ban-list">${a.bans}</div>` : ''}
+      </div>
+    `).join('') || '<p style="color:var(--green); font-size: 13px;">✓ No chemical red-flags identified.</p>'}
+
+    <div class="eco-card">
+      <div class="eco-grade" style="background:${ecoColors[eco]}; color:#000">${eco.toUpperCase()}</div>
+      <div>
+        <div style="font-size: 10px; color:var(--muted);">TOXICITY / ECO IMPACT</div>
+        <div style="font-size: 13px; font-weight:bold;">${eco === 'e' ? 'High Environmental Load' : (eco === 'a' ? 'Sustainable Choice' : 'Standard Footprint')}</div>
+      </div>
     </div>
   `;
 
-  // Nutrition Tab (Condensed)
+  // Nutrition Tab
   document.getElementById('nutrition').innerHTML = `
-    <h3>Biometric Data (100g)</h3>
-    <table class="nutri-table">
-      <tr><td>Energy</td><td align="right">${n.energy_kcal_100g || 0} kcal</td></tr>
-      <tr><td>Added Sugars</td><td align="right" class="${n.sugars_100g > 15 ? 'val-bad' : ''}">${n.sugars_100g || 0}g</td></tr>
-      <tr><td>Processing Level</td><td align="right">NOVA Group ${p.nova_group || 'N/A'}</td></tr>
+    <div class="analysis-header">BIOMETRIC LEDGER (100G)</div>
+    <table width="100%" style="border-collapse:collapse">
+      <tr style="border-bottom: 1px solid #222">
+        <td style="padding:10px 0; font-size: 14px;">Energy Index</td>
+        <td align="right">${n.energy_kcal_100g || 0} kcal</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #222">
+        <td style="padding:10px 0; font-size: 14px;">Glycemic Load (Sugars)</td>
+        <td align="right" class="${n.sugars_100g > 15 ? 'val-bad' : ''}">${n.sugars_100g || 0}g</td>
+      </tr>
+      <tr>
+        <td style="padding:10px 0; font-size: 14px;">Processing Factor</td>
+        <td align="right">NOVA ${p.nova_group || 'N/A'}</td>
+      </tr>
     </table>
   `;
 
   // Ingredients Tab
   document.getElementById('ingredients').innerHTML = `
-    <h4 style="color:var(--muted)">Full Ingredient Ledger</h4>
-    <p style="font-size:13px; color:#eee; line-height:1.6">${p.ingredients_text || "Analysis unavailable"}</p>
+    <div class="analysis-header">INGREDIENT LEDGER</div>
+    <p style="font-size:12px; color:#aaa; line-height: 1.6;">${p.ingredients_text || "Ledger unavailable."}</p>
   `;
-  
+
   openTab('overview', document.querySelector('.tab'));
 }
 
-// Camera Toggle Logic
 async function toggleScan() {
   const container = document.getElementById("videoContainer");
   if (stream) {
@@ -259,3 +280,4 @@ async function toggleScan() {
 </script>
 </body>
 </html>
+
