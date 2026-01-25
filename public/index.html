@@ -1,70 +1,185 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Nutri</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
+  <title>NutriCheck</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#0f9d58">
-
+  <meta name="theme-color" content="#000000">
   <script src="https://unpkg.com/@zxing/library@latest"></script>
 
   <style>
+    :root {
+      --primary: #00ff95;
+      --danger: #ff4757;
+      --bg: #0a0a0a;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --glass: rgba(255, 255, 255, 0.03);
+    }
+
     body {
-      background: radial-gradient(circle, #111, #000);
-      color: white;
-      font-family: system-ui;
-      text-align: center;
-      padding-top: 80px;
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(0, 255, 149, 0.05) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(0, 162, 255, 0.05) 0px, transparent 50%);
+      color: #e0e0e0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 400px;
+      perspective: 1000px;
     }
 
     .card {
-      background: rgba(255,255,255,0.08);
-      backdrop-filter: blur(12px);
-      border-radius: 20px;
-      padding: 25px;
-      max-width: 320px;
-      margin: auto;
-      box-shadow: 0 0 30px rgba(0,255,150,0.2);
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 32px;
+      padding: 32px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }
 
-    input, button {
+    h1 {
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 24px;
+      font-size: 28px;
+      background: linear-gradient(to right, #fff, #888);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .input-group {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"] {
       width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      border-radius: 10px;
-      border: none;
-      font-size: 16px;
-    }
-
-    button {
-      background: #0f9d58;
+      background: var(--glass);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 14px 18px;
+      border-radius: 14px;
       color: white;
-      font-weight: bold;
+      font-size: 16px;
+      box-sizing: border-box;
+      transition: all 0.3s ease;
     }
 
-    .bad { color: red; }
-    .good { color: #00ff99; }
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* Custom File Upload Styling */
+    .camera-btn {
+      display: inline-block;
+      width: 100%;
+      padding: 14px;
+      background: white;
+      color: black;
+      border-radius: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 12px;
+      transition: transform 0.2s ease;
+    }
+
+    .camera-btn:active { transform: scale(0.98); }
+
+    #cameraInput { display: none; }
+
+    .analyze-btn {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      padding: 14px;
+      border-radius: 14px;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .analyze-btn:hover {
+      background: var(--primary);
+      color: black;
+    }
+
+    #result { margin-top: 30px; text-align: left; }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 15px;
+    }
+
+    .stat-card {
+      background: rgba(255,255,255,0.03);
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .stat-label { font-size: 11px; text-transform: uppercase; color: #888; letter-spacing: 1px; }
+    .stat-value { font-size: 18px; font-weight: 600; margin-top: 4px; }
+
+    .ingredients-box {
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      background: rgba(255, 71, 87, 0.1);
+      color: var(--danger);
+      margin: 3px;
+    }
+
+    .good { color: var(--primary); }
+    .bad { color: var(--danger); }
+    
+    .loading-shimmer {
+        animation: pulse 1.5s infinite;
+        opacity: 0.6;
+    }
+
+    @keyframes pulse { 50% { opacity: 0.3; } }
   </style>
 </head>
 
 <body>
-<div class="card">
-  <h1>🥗 NutriCheck</h1>
+<div class="container">
+  <div class="card">
+    <h1>NutriCheck</h1>
 
-  <input id="barcode" placeholder="Enter or scan barcode">
+    <label for="cameraInput" class="camera-btn">📷 Scan Product</label>
+    <input type="file" accept="image/*" capture="environment" id="cameraInput">
 
-  <input 
-    type="file" 
-    accept="image/*" 
-    capture="environment"
-    id="cameraInput"
-  >
+    <div class="input-group">
+      <input id="barcode" type="text" placeholder="Or enter barcode manually">
+    </div>
 
-  <button onclick="analyze()">Analyze</button>
+    <button class="analyze-btn" onclick="analyze()">Run Analysis</button>
 
-  <div id="result"></div>
+    <div id="result"></div>
+  </div>
 </div>
 
 <script>
@@ -72,38 +187,80 @@ const codeReader = new ZXing.BrowserMultiFormatReader();
 
 document.getElementById("cameraInput").addEventListener("change", async (e) => {
   const file = e.target.files[0];
+  if(!file) return;
+  
+  const resultDiv = document.getElementById("result");
+  resultDiv.innerHTML = "<p class='loading-shimmer'>Processing image...</p>";
+
   const img = document.createElement("img");
   img.src = URL.createObjectURL(file);
 
   img.onload = async () => {
-    const result = await codeReader.decodeFromImage(img);
-    document.getElementById("barcode").value = result.text;
+    try {
+      const result = await codeReader.decodeFromImage(img);
+      document.getElementById("barcode").value = result.text;
+      analyze(); // Auto-analyze after scanning
+    } catch (err) {
+      resultDiv.innerHTML = "❌ Could not read barcode. Try again.";
+    }
   };
 });
 
 async function analyze() {
   const code = document.getElementById("barcode").value;
-  const res = await fetch(`/api/check/${code}`);
-  const data = await res.json();
+  const result = document.getElementById("result");
+  
+  if(!code) return;
+  
+  result.innerHTML = "<p class='loading-shimmer'>Consulting database...</p>";
 
-  if (data.error) {
-    result.innerHTML = "❌ Product not found";
-    return;
+  try {
+    const res = await fetch(`/api/check/${code}`);
+    const data = await res.json();
+
+    if (data.error) {
+      result.innerHTML = "❌ Product not found";
+      return;
+    }
+
+    // Dynamic UI construction
+    result.innerHTML = `
+      <h2 style="margin: 0 0 10px 0; font-size: 20px;">${data.productName}</h2>
+      <p style="color: #888; font-size: 14px; margin-bottom: 20px;">Swap for: <span style="color:white">${data.alternativeBrand}</span></p>
+      
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-label">Sugar</div>
+          <div class="stat-value ${data.sugar > 10 ? 'bad' : 'good'}">${data.sugar}g</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Fat</div>
+          <div class="stat-value">${data.fat}g</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Salt</div>
+          <div class="stat-value">${data.salt}g</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Energy</div>
+          <div class="stat-value">${data.energy}kcal</div>
+        </div>
+      </div>
+
+      <div class="ingredients-box">
+        <div class="stat-label" style="margin-bottom:10px">Analysis</div>
+        ${data.ingredientAnalysis.harmful.map(ing => `<span class="tag">${ing}</span>`).join("")}
+        <p style="font-size: 13px; color: #aaa; margin-top: 15px; line-height: 1.5;">
+          <strong>Ingredients:</strong><br>
+          ${data.ingredients || 'Detailed list unavailable for this product.'}
+        </p>
+      </div>
+    `;
+  } catch (error) {
+    result.innerHTML = "❌ Connection Error";
   }
-
-  result.innerHTML = `
-    <h3>${data.productName}</h3>
-    <p>Sugar: <span class="${data.sugar > 10 ? 'bad' : 'good'}">${data.sugar}</span></p>
-    <p>Fat: ${data.fat}</p>
-    <p>Salt: ${data.salt}</p>
-    <p>Energy: ${data.energy}</p>
-    <p>Alternative: ${data.alternativeBrand}</p>
-    <p>Harmful: ${data.ingredientAnalysis.harmful.join(", ")}</p>
-  `;
 }
-</script>
 
-<script>
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/service-worker.js");
 }
