@@ -1,240 +1,104 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nutri</title>
-<style>
-:root{
-  --bg:#0b0b0b;
-  --card:#141414;
-  --green:#4caf50;
-  --text:#ffffff;
-  --muted:#9e9e9e;
-  --red:#ef5350;
-  --yellow:#ffb74d;
-}
-
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font-family: -apple-system, system-ui, sans-serif;
-  background:var(--bg);
-  color:var(--text);
-}
-
-.container{ max-width:460px; margin:auto; padding:16px; }
-
-/* Notification Toast */
-#toast {
-    position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
-    background: #1a1a1a; color: #fff; padding: 12px 24px; border-radius: 12px;
-    border: 1px solid var(--red); transition: 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28); z-index: 10000;
-    font-size: 14px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
-#toast.show { transform: translateX(-50%) translateY(0); }
-
-.card{ background:var(--card); border-radius:22px; padding:20px; margin-bottom:15px; border: 1px solid #222; }
-
-/* Camera UI */
-#videoContainer { position: relative; width: 100%; display: none; margin-bottom: 12px; border-radius: 18px; overflow: hidden; }
-.scan-region {
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  width: 70%; height: 50%; border: 2px solid var(--green); border-radius: 12px;
-  box-shadow: 0 0 0 999px rgba(0,0,0,0.6);
-}
-
-input{
-  width:100%; padding:14px; border-radius:12px; border:1px solid #333;
-  background:#000; color:#fff; margin-bottom:10px; font-size: 16px;
-}
-
-button{ width:100%; padding:14px; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:14px; }
-.scanBtn{ background:#222; color:#fff; margin-bottom:8px; }
-.checkBtn{ background:var(--green); color:#000; }
-
-.tabs{ display:flex; gap:8px; margin-bottom:15px; }
-.tab{
-  flex:1; text-align:center; padding:12px; border-radius:12px;
-  background:#1a1a1a; color:#666; cursor:pointer; font-size: 12px; font-weight: bold;
-}
-.tab.active{ background:var(--green); color:#000; }
-
-/* Score Circle Styling */
-.score-circle {
-  width: 100px; height: 100px; border-radius: 50%;
-  border: 4px solid #222; margin: 10px auto;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  background: radial-gradient(circle, #1a1a1a 0%, #0b0b0b 100%);
-  box-shadow: 0 0 20px rgba(76, 175, 80, 0.1);
-}
-.score-val { font-size: 34px; font-weight: 800; }
-.score-lab { font-size: 10px; color: var(--muted); text-transform: uppercase; margin-top: -4px; }
-
-/* Alert Styling */
-.alert-item { border-left: 3px solid var(--red); padding-left: 12px; margin-bottom: 15px; }
-.alert-item b { color: var(--red); font-size: 12px; text-transform: uppercase; }
-.alert-item p { margin: 2px 0; font-size: 14px; color: #ccc; }
-
-/* Alternative Suggestion Box */
-.alt-box {
-    background: rgba(76, 175, 80, 0.05);
-    border: 1px dashed var(--green);
-    border-radius: 15px; padding: 15px; margin-top: 15px;
-}
-.alt-title { font-size: 11px; color: var(--green); font-weight: bold; margin-bottom: 8px; }
-
-.hidden{ display:none; }
-</style>
+  <title>NutriCheck</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Arial;
+      background: #111;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    input {
+      width: 90%;
+      padding: 12px;
+      font-size: 18px;
+      margin-top: 10px;
+    }
+    button {
+      padding: 12px 20px;
+      font-size: 18px;
+      margin-top: 10px;
+      background: #00c853;
+      color: black;
+      border: none;
+      border-radius: 5px;
+    }
+    .card {
+      background: #1e1e1e;
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: left;
+    }
+    .bad { color: #ff5252; }
+    .warn { color: #ffab00; }
+    .good { color: #00e676; }
+  </style>
 </head>
 <body>
 
-<div id="toast">Barcode not found open food fact</div>
+  <h1>🥗 NutriCheck</h1>
+  <p>Enter barcode number</p>
 
-<div class="container">
-  <h1 style="color:var(--green)">Nutri</h1>
-  <p style="color:var(--muted); font-size:12px; margin: 0 0 15px 0;">BIO-CHEMICAL INTELLIGENCE</p>
+  <input id="barcode" placeholder="Example: 8901030860003">
+  <br>
+  <button onclick="checkFood()">Analyze</button>
 
-  <div class="card">
-    <div id="videoContainer">
-        <video id="video" style="width:100%"></video>
-        <div class="scan-region"></div>
-    </div>
-    <input id="barcode" type="number" placeholder="Enter barcode">
-    <button class="scanBtn" onclick="toggleScan()">📷 Scan Barcode</button>
-    <button id="checkBtn" class="checkBtn" onclick="checkFood()">Initiate Bio-Scan</button>
-  </div>
-
-  <div class="tabs">
-    <div class="tab active" onclick="openTab('overview', this)">OVERVIEW</div>
-    <div class="tab" onclick="openTab('nutrition', this)">BIO-DATA</div>
-    <div class="tab" onclick="openTab('ingredients', this)">INGREDIENTS</div>
-  </div>
-
-  <div id="overview" class="card screen"></div>
-  <div id="nutrition" class="card hidden screen"></div>
-  <div id="ingredients" class="card hidden screen"></div>
-</div>
+  <div id="result"></div>
 
 <script>
-let stream = null;
-
-function showToast(m) {
-    const t = document.getElementById("toast");
-    t.innerText = m; t.classList.add("show");
-    setTimeout(()=>t.classList.remove("show"), 4000);
-}
-
-function openTab(id, el){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.screen').forEach(d=>d.classList.add('hidden'));
-  el.classList.add('active');
-  document.getElementById(id).classList.remove('hidden');
-}
-
-async function toggleScan() {
-  const v = document.getElementById("videoContainer");
-  if (stream) {
-    v.style.display="none";
-    stream.getTracks().forEach(t=>t.stop());
-    stream = null;
-  } else {
-    v.style.display="block";
-    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
-    video.srcObject = stream;
-    video.play();
-  }
-}
-
 async function checkFood() {
   const code = document.getElementById("barcode").value;
-  if(!code) return;
-  document.getElementById("checkBtn").innerText = "Analyzing ledger...";
-  
+  const result = document.getElementById("result");
+
+  result.innerHTML = "Loading...";
+
   try {
-    const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json`);
+    const res = await fetch(
+      `https://nutri-5qes.onrender.com/api/check/${code}`
+    );
     const data = await res.json();
-    if(!data.product) { showToast("Barcode not found open food fact"); return; }
-    render(data.product);
-  } catch(e) { showToast("Sync Error"); }
-  finally { document.getElementById("checkBtn").innerText = "Initiate Bio-Scan"; }
-}
 
-async function findAlternative(category) {
-    if(!category) return null;
-    try {
-        const cleanCat = category.split(',')[0];
-        const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?action=process&tagtype_0=categories&tag_contains_0=contains&tag_0=${cleanCat}&sort_by=unique_scans_n&page_size=20&json=true`);
-        const data = await res.json();
-        // Return first product with a good nutriscore
-        return data.products.find(p => p.nutrition_grades === 'a' || p.nutrition_grades === 'b');
-    } catch(e) { return null; }
-}
+    if (data.error) {
+      result.innerHTML = data.error;
+      return;
+    }
 
-async function render(p) {
-  const n = p.nutriments || {};
-  const sugar = n.sugars_100g || 0;
-  
-  // Strict Scoring
-  let score = 100;
-  if(sugar > 40) score -= 60; 
-  else if(sugar > 15) score -= 30;
-  if(p.nova_group === 4) score -= 30;
-  score = Math.max(5, score); // Min score of 5
-  
-  const color = score > 65 ? 'var(--green)' : (score > 35 ? 'var(--yellow)' : 'var(--red)');
+    result.innerHTML = `
+      <div class="card">
+        <h2>${data.productName}</h2>
+        <p>Energy: ${data.energy ?? "N/A"} kcal</p>
+        <p>Sugar: ${data.sugar ?? "N/A"} g</p>
+        <p>Fat: ${data.fat ?? "N/A"} g</p>
+        <p>Fiber: ${data.fiber ?? "N/A"} g</p>
+        <p>Salt: ${data.salt ?? "N/A"} g</p>
+      </div>
 
-  // Start finding alternative in background
-  const alt = score < 50 ? await findAlternative(p.categories) : null;
+      <div class="card">
+        <h3>Ingredients</h3>
+        <p>${data.ingredients}</p>
+      </div>
 
-  document.getElementById('overview').innerHTML = `
-    <div class="score-circle" style="border-color:${color}">
-        <div class="score-val" style="color:${color}">${score}</div>
-        <div class="score-lab">Score</div>
-    </div>
-    <div style="text-align:center; margin-bottom:20px;">
-        <h2 style="margin:0">${p.product_name || 'Unknown Item'}</h2>
-        <div style="color:var(--muted); font-size:12px">${p.brands || ''}</div>
-    </div>
-    
-    <div style="font-size:10px; color:var(--muted); margin-bottom:12px; letter-spacing:1px;">ANALYSIS REPORT</div>
-    ${p.nova_group === 4 ? `
-    <div class="alert-item">
-        <b>ULTRA-PROCESSED</b>
-        <p>Industrial formulation detected (NOVA 4).</p>
-    </div>` : ''}
-    ${sugar > 20 ? `<div class="alert-item" style="border-color:var(--yellow)"><b>HIGH SUGAR</b><p>Contains ${sugar}g of sugar per 100g.</p></div>` : ''}
+      <div class="card">
+        <h3>Ingredient Analysis</h3>
+        <p class="bad">❌ Harmful: ${data.ingredientAnalysis.harmful.join(", ") || "None"}</p>
+        <p class="warn">⚠️ Caution: ${data.ingredientAnalysis.caution.join(", ") || "None"}</p>
+        <p class="good">✅ Safe: ${data.ingredientAnalysis.safe.join(", ") || "None"}</p>
+      </div>
 
-    ${alt ? `
-    <div class="alt-box">
-        <div class="alt-title">✨ RECOMMENDED ALTERNATIVE</div>
-        <div style="font-size:14px; font-weight:bold;">${alt.product_name}</div>
-        <div style="font-size:12px; color:var(--muted)">Score Improvement: High</div>
-    </div>` : ''}
-  `;
-
-  document.getElementById('nutrition').innerHTML = `
-    <h3 style="margin-top:0">Nutritional Profile</h3>
-    <div style="padding: 10px 0; border-bottom:1px solid #222; display:flex; justify-content:space-between;">
-        <span>Sugar Content</span><span style="font-weight:bold">${sugar}g</span>
-    </div>
-    <div style="padding: 10px 0; border-bottom:1px solid #222; display:flex; justify-content:space-between;">
-        <span>Processing (NOVA)</span><span style="font-weight:bold">Level ${p.nova_group || 'N/A'}</span>
-    </div>
-    <div style="padding: 10px 0; border-bottom:1px solid #222; display:flex; justify-content:space-between;">
-        <span>Energy</span><span style="font-weight:bold">${n.energy_kcal_100g || 0} kcal</span>
-    </div>
-  `;
-
-  document.getElementById('ingredients').innerHTML = `
-    <div style="font-size:14px; color:#ccc; line-height:1.7;">${p.ingredients_text || "No ingredients listed."}</div>
-  `;
-
-  openTab('overview', document.querySelectorAll('.tab')[0]);
+      <div class="card">
+        <h3>Better Alternative</h3>
+        <p>${data.alternativeBrand}</p>
+      </div>
+    `;
+  } catch (err) {
+    result.innerHTML = "Server not responding";
+  }
 }
 </script>
+
 </body>
 </html>
-
-
-
