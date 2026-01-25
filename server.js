@@ -4,6 +4,9 @@ const cors = require("cors");
 const app = express();
 app.use(cors());
 
+const path = require("path");
+app.use(express.static(path.join(__dirname, "public")));
+
 app.get("/api/check/:barcode", async (req, res) => {
   try {
     const code = req.params.barcode;
@@ -114,3 +117,4 @@ app.get("/api/check/:barcode", async (req, res) => {
 app.listen(4000, () => {
   console.log("Backend running at http://localhost:4000");
 });
+
