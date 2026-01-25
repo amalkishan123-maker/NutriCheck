@@ -1,5 +1,11 @@
 self.addEventListener("install", e => {
-  self.skipWaiting();
+  e.waitUntil(
+    caches.open("nutri-cache").then(cache => {
+      return cache.addAll([
+        "/",
+        "/index.html",
+        "/manifest.json"
+      ]);
+    })
+  );
 });
-
-self.addEventListener("fetch", e => {});
