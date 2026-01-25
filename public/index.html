@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>NutriCheck</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Arial;
+      background: #111;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    input {
+      width: 90%;
+      padding: 12px;
+      font-size: 18px;
+      margin-top: 10px;
+    }
+    button {
+      padding: 12px 20px;
+      font-size: 18px;
+      margin-top: 10px;
+      background: #00c853;
+      color: black;
+      border: none;
+      border-radius: 5px;
+    }
+    .card {
+      background: #1e1e1e;
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: left;
+    }
+    .bad { color: #ff5252; }
+    .warn { color: #ffab00; }
+    .good { color: #00e676; }
+  </style>
+</head>
+<body>
+
+  <h1>🥗 NutriCheck</h1>
+  <p>Enter barcode number</p>
+
+  <input id="barcode" placeholder="Example: 8901030860003">
+  <br>
+  <button onclick="checkFood()">Analyze</button>
+
+  <div id="result"></div>
+
+<script>
+async function checkFood() {
+  const code = document.getElementById("barcode").value;
+  const result = document.getElementById("result");
+
+  result.innerHTML = "Loading...";
+
+  try {
+    const res = await fetch(
+      `https://nutri-5qes.onrender.com/api/check/${code}`
+    );
+    const data = await res.json();
+
+    if (data.error) {
+      result.innerHTML = data.error;
+      return;
+    }
+
+    result.innerHTML = `
+      <div class="card">
+        <h2>${data.productName}</h2>
+        <p>Energy: ${data.energy ?? "N/A"} kcal</p>
+        <p>Sugar: ${data.sugar ?? "N/A"} g</p>
+        <p>Fat: ${data.fat ?? "N/A"} g</p>
+        <p>Fiber: ${data.fiber ?? "N/A"} g</p>
+        <p>Salt: ${data.salt ?? "N/A"} g</p>
+      </div>
+
+      <div class="card">
+        <h3>Ingredients</h3>
+        <p>${data.ingredients}</p>
+      </div>
+
+      <div class="card">
+        <h3>Ingredient Analysis</h3>
+        <p class="bad">❌ Harmful: ${data.ingredientAnalysis.harmful.join(", ") || "None"}</p>
+        <p class="warn">⚠️ Caution: ${data.ingredientAnalysis.caution.join(", ") || "None"}</p>
+        <p class="good">✅ Safe: ${data.ingredientAnalysis.safe.join(", ") || "None"}</p>
+      </div>
+
+      <div class="card">
+        <h3>Better Alternative</h3>
+        <p>${data.alternativeBrand}</p>
+      </div>
+    `;
+  } catch (err) {
+    result.innerHTML = "Server not responding";
+  }
+}
+</script>
+
+</body>
+</html>
