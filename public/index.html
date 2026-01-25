@@ -2,265 +2,118 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>NutriCheck</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
-  <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#000000">
+  <title>NutriCheck Pro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://unpkg.com/@zxing/library@latest"></script>
-
   <style>
     :root {
-      --primary: #00ff95;
-      --danger: #ff4757;
-      --bg: #0a0a0a;
-      --card-bg: rgba(255, 255, 255, 0.05);
-      --glass: rgba(255, 255, 255, 0.03);
+      --primary:#00ff95; --danger:#ff4757; --warning:#ffa502;
+      --bg:#050505; --card-bg:#121212; --border:rgba(255,255,255,0.1);
     }
-
-    body {
-      background-color: var(--bg);
-      background-image: 
-        radial-gradient(at 0% 0%, rgba(0, 255, 149, 0.05) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(0, 162, 255, 0.05) 0px, transparent 50%);
-      color: #e0e0e0;
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    .container {
-      width: 90%;
-      max-width: 400px;
-      perspective: 1000px;
-    }
-
-    .card {
-      background: var(--card-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 32px;
-      padding: 32px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    }
-
-    h1 {
-      font-weight: 800;
-      letter-spacing: -1px;
-      margin-bottom: 24px;
-      font-size: 28px;
-      background: linear-gradient(to right, #fff, #888);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .input-group {
-      position: relative;
-      margin-bottom: 20px;
-    }
-
-    input[type="text"] {
-      width: 100%;
-      background: var(--glass);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 14px 18px;
-      border-radius: 14px;
-      color: white;
-      font-size: 16px;
-      box-sizing: border-box;
-      transition: all 0.3s ease;
-    }
-
-    input:focus {
-      outline: none;
-      border-color: var(--primary);
-      background: rgba(255, 255, 255, 0.08);
-    }
-
-    /* Custom File Upload Styling */
-    .camera-btn {
-      display: inline-block;
-      width: 100%;
-      padding: 14px;
-      background: white;
-      color: black;
-      border-radius: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      margin-bottom: 12px;
-      transition: transform 0.2s ease;
-    }
-
-    .camera-btn:active { transform: scale(0.98); }
-
-    #cameraInput { display: none; }
-
-    .analyze-btn {
-      width: 100%;
-      background: transparent;
-      border: 1px solid var(--primary);
-      color: var(--primary);
-      padding: 14px;
-      border-radius: 14px;
-      font-weight: 600;
-      font-size: 16px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .analyze-btn:hover {
-      background: var(--primary);
-      color: black;
-    }
-
-    #result { margin-top: 30px; text-align: left; }
-
-    .stat-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 15px;
-    }
-
-    .stat-card {
-      background: rgba(255,255,255,0.03);
-      padding: 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.05);
-    }
-
-    .stat-label { font-size: 11px; text-transform: uppercase; color: #888; letter-spacing: 1px; }
-    .stat-value { font-size: 18px; font-weight: 600; margin-top: 4px; }
-
-    .ingredients-box {
-      margin-top: 20px;
-      padding-top: 15px;
-      border-top: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .tag {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 12px;
-      background: rgba(255, 71, 87, 0.1);
-      color: var(--danger);
-      margin: 3px;
-    }
-
-    .good { color: var(--primary); }
-    .bad { color: var(--danger); }
-    
-    .loading-shimmer {
-        animation: pulse 1.5s infinite;
-        opacity: 0.6;
-    }
-
-    @keyframes pulse { 50% { opacity: 0.3; } }
+    body{background:var(--bg);color:white;font-family:Inter,sans-serif;margin:0;display:flex;flex-direction:column;align-items:center}
+    #scanner-container{width:100%;max-width:450px;height:300px;background:#000;position:relative}
+    video{width:100%;height:100%;object-fit:cover}
+    .scan-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:250px;height:150px;border:2px solid var(--primary);border-radius:15px}
+    .content{width:90%;max-width:400px;margin-top:-30px}
+    .main-card{background:var(--card-bg);border-radius:24px;padding:24px;border:1px solid var(--border)}
+    .score-circle{width:80px;height:80px;border-radius:50%;border:5px solid var(--primary);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800}
+    .tabs{display:flex;gap:10px;margin-bottom:15px}
+    .tab-btn{flex:1;padding:10px;border:none;background:#222;color:#888;border-radius:8px}
+    .tab-btn.active{background:#000;color:var(--primary)}
+    .section{display:none} .section.active{display:block}
+    .stat-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .stat-box{background:#1a1a1a;padding:12px;border-radius:14px}
+    .label{font-size:11px;color:#666;text-transform:uppercase}
+    .val{font-size:18px;font-weight:600}
+    .tag{background:rgba(255,71,87,.15);color:var(--danger);padding:4px 10px;border-radius:20px;font-size:12px;margin:3px;display:inline-block}
+    .primary-btn{width:100%;padding:16px;background:var(--primary);border:none;border-radius:14px;font-weight:700;margin-top:15px}
   </style>
 </head>
 
 <body>
-<div class="container">
-  <div class="card">
-    <h1>NutriCheck</h1>
 
-    <label for="cameraInput" class="camera-btn">📷 Scan Product</label>
-    <input type="file" accept="image/*" capture="environment" id="cameraInput">
+<div id="scanner-container">
+  <video id="video"></video>
+  <div class="scan-overlay"></div>
+</div>
 
-    <div class="input-group">
-      <input id="barcode" type="text" placeholder="Or enter barcode manually">
+<div class="content">
+  <div class="main-card">
+    <input id="barcode" placeholder="Barcode..." style="width:100%;background:none;border:none;color:white;text-align:center;margin-bottom:10px">
+
+    <div id="result-ui" style="display:none">
+      <div style="display:flex;gap:15px;margin-bottom:15px">
+        <div id="score-ring" class="score-circle">--</div>
+        <div>
+          <h2 id="prod-name"></h2>
+          <p id="prod-swap" style="color:#888;font-size:12px"></p>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('summary',this)">Summary</button>
+        <button class="tab-btn" onclick="showTab('ingredients',this)">Ingredients</button>
+      </div>
+
+      <div id="summary" class="section active">
+        <div class="stat-row">
+          <div class="stat-box"><div class="label">Sugar</div><div id="val-sugar" class="val"></div></div>
+          <div class="stat-box"><div class="label">Energy</div><div id="val-energy" class="val"></div></div>
+        </div>
+        <div class="stat-row">
+          <div class="stat-box"><div class="label">Fat</div><div id="val-fat" class="val"></div></div>
+          <div class="stat-box"><div class="label">Salt</div><div id="val-salt" class="val"></div></div>
+        </div>
+      </div>
+
+      <div id="ingredients" class="section">
+        <div class="label">Harmful Additives</div>
+        <div id="harmful-list"></div>
+        <div class="label">Full Ingredients</div>
+        <p id="full-ingredients" style="font-size:13px;color:#aaa"></p>
+      </div>
     </div>
 
-    <button class="analyze-btn" onclick="analyze()">Run Analysis</button>
-
-    <div id="result"></div>
+    <button class="primary-btn" onclick="analyze()">RUN ANALYSIS</button>
   </div>
 </div>
 
 <script>
-const codeReader = new ZXing.BrowserMultiFormatReader();
-
-document.getElementById("cameraInput").addEventListener("change", async (e) => {
-  const file = e.target.files[0];
-  if(!file) return;
-  
-  const resultDiv = document.getElementById("result");
-  resultDiv.innerHTML = "<p class='loading-shimmer'>Processing image...</p>";
-
-  const img = document.createElement("img");
-  img.src = URL.createObjectURL(file);
-
-  img.onload = async () => {
-    try {
-      const result = await codeReader.decodeFromImage(img);
-      document.getElementById("barcode").value = result.text;
-      analyze(); // Auto-analyze after scanning
-    } catch (err) {
-      resultDiv.innerHTML = "❌ Could not read barcode. Try again.";
-    }
-  };
+const reader = new ZXing.BrowserMultiFormatReader();
+reader.decodeFromVideoDevice(null,'video',(res)=>{
+  if(res) document.getElementById("barcode").value = res.text;
 });
 
-async function analyze() {
-  const code = document.getElementById("barcode").value;
-  const result = document.getElementById("result");
-  
-  if(!code) return;
-  
-  result.innerHTML = "<p class='loading-shimmer'>Consulting database...</p>";
-
-  try {
-    const res = await fetch(`/api/check/${code}`);
-    const data = await res.json();
-
-    if (data.error) {
-      result.innerHTML = "❌ Product not found";
-      return;
-    }
-
-    // Dynamic UI construction
-    result.innerHTML = `
-      <h2 style="margin: 0 0 10px 0; font-size: 20px;">${data.productName}</h2>
-      <p style="color: #888; font-size: 14px; margin-bottom: 20px;">Swap for: <span style="color:white">${data.alternativeBrand}</span></p>
-      
-      <div class="stat-grid">
-        <div class="stat-card">
-          <div class="stat-label">Sugar</div>
-          <div class="stat-value ${data.sugar > 10 ? 'bad' : 'good'}">${data.sugar}g</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Fat</div>
-          <div class="stat-value">${data.fat}g</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Salt</div>
-          <div class="stat-value">${data.salt}g</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Energy</div>
-          <div class="stat-value">${data.energy}kcal</div>
-        </div>
-      </div>
-
-      <div class="ingredients-box">
-        <div class="stat-label" style="margin-bottom:10px">Analysis</div>
-        ${data.ingredientAnalysis.harmful.map(ing => `<span class="tag">${ing}</span>`).join("")}
-        <p style="font-size: 13px; color: #aaa; margin-top: 15px; line-height: 1.5;">
-          <strong>Ingredients:</strong><br>
-          ${data.ingredients || 'Detailed list unavailable for this product.'}
-        </p>
-      </div>
-    `;
-  } catch (error) {
-    result.innerHTML = "❌ Connection Error";
-  }
+function showTab(id,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
 }
 
+async function analyze(){
+  const code = barcode.value;
+  const res = await fetch(`/api/check/${code}`);
+  const data = await res.json();
+  if(data.error) return alert("Not found");
+
+  result-ui.style.display="block";
+
+  const sugar = parseFloat(data.sugar)||0;
+  let score = Math.max(0,100 - sugar*4);
+
+  score-ring.innerText = score.toFixed(0);
+  prod-name.innerText = data.productName;
+  prod-swap.innerText = "Swap: "+data.alternativeBrand;
+  val-sugar.innerText = sugar+"g";
+  val-fat.innerText = (data.fat||0)+"g";
+  val-salt.innerText = (data.salt||0)+"g";
+  val-energy.innerText = (data.energy||0)+" kcal";
+
+  harmful-list.innerHTML = data.ingredientAnalysis.harmful.map(x=>`<span class="tag">${x}</span>`).join("");
+  full-ingredients.innerText = data.ingredients || "No data";
+}
+  <script>
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/service-worker.js");
 }
