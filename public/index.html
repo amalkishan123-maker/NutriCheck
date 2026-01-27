@@ -13,244 +13,221 @@
   --bg:#0b0b0b;
   --card:#141414;
   --green:#4caf50;
-  --red:#ef5350;
-  --orange:#ffb74d;
   --text:#ffffff;
   --muted:#9e9e9e;
+  --red:#ef5350;
+  --yellow:#ffb74d;
 }
 
+*{box-sizing:border-box}
 body{
   margin:0;
+  font-family:Arial,Helvetica,sans-serif;
   background:var(--bg);
   color:var(--text);
-  font-family:system-ui,Arial;
 }
 
 .container{
-  max-width:430px;
+  max-width:460px;
   margin:auto;
   padding:16px;
 }
 
+h1{color:var(--green);margin:4px 0}
+.tagline{color:var(--muted);font-size:14px;margin-bottom:12px}
+
 .card{
   background:var(--card);
-  border-radius:18px;
-  padding:16px;
-  margin-bottom:16px;
-  box-shadow:0 10px 40px rgba(0,0,0,.6);
+  border-radius:14px;
+  padding:14px;
+  margin-bottom:14px;
 }
 
-input{
+input, button{
   width:100%;
   padding:12px;
-  border-radius:12px;
+  border-radius:10px;
   border:none;
-  background:#1f1f1f;
-  color:#fff;
-  font-size:16px;
   margin-bottom:10px;
+  font-size:16px;
 }
 
-button{
-  width:100%;
-  padding:13px;
-  border:none;
-  border-radius:12px;
-  font-weight:bold;
+input{background:#1f1f1f;color:#fff}
+button{font-weight:bold;cursor:pointer}
+.checkBtn{background:var(--green);color:#000}
+
+.tabs{
+  display:flex;
+  gap:6px;
+  margin-bottom:12px;
+}
+.tab{
+  flex:1;
+  text-align:center;
+  padding:10px;
+  border-radius:10px;
+  background:#1f1f1f;
+  color:#bbb;
   cursor:pointer;
 }
-
-.scanBtn{background:#222;color:white;margin-bottom:8px}
-.checkBtn{background:var(--green);color:black}
-
-video{
-  width:100%;
-  border-radius:12px;
-  display:none;
-  margin-top:10px;
+.tab.active{
+  background:var(--green);
+  color:#000;
 }
 
-/* SCORE CIRCLE */
-.scoreWrap{
-  display:flex;
-  justify-content:center;
-  margin-top:20px;
-}
-.scoreCircle{
-  width:160px;
-  height:160px;
+.score{
+  width:120px;height:120px;
   border-radius:50%;
   display:flex;
-  flex-direction:column;
-  justify-content:center;
   align-items:center;
-  font-size:48px;
-  font-weight:bold;
-  color:var(--green);
-  box-shadow:0 0 40px rgba(76,175,80,.6);
+  justify-content:center;
+  font-size:34px;
+  margin:12px auto;
 }
-.scoreCircle span{
-  font-size:14px;
-  color:var(--muted);
-  letter-spacing:2px;
-}
-
-/* BARS */
-.barRow{margin:14px 0}
-.barLabel{
-  display:flex;
-  justify-content:space-between;
-  margin-bottom:6px;
-}
-.bar{
-  width:100%;
-  height:14px;
-  background:#222;
-  border-radius:20px;
-  overflow:hidden;
-}
-.barFill{
-  height:100%;
-  background:var(--red);
-  width:0%;
-  border-radius:20px;
-}
-
-.processCard{
-  text-align:center;
-  padding:18px;
-  background:black;
-  border-radius:16px;
-  font-size:22px;
-  font-weight:bold;
-  color:var(--orange);
-}
+.healthy{background:#1b5e20}
+.moderate{background:#f9a825;color:#000}
+.unhealthy{background:#8e0000}
 
 .hidden{display:none}
-.center{text-align:center}
-.small{font-size:13px;color:var(--muted)}
+.good{color:#66bb6a}
+.bad{color:#ef5350}
+footer{text-align:center;font-size:12px;color:#888;margin-top:12px}
 </style>
 </head>
 
 <body>
 <div class="container">
 
+<h1>Nutri</h1>
+<div class="tagline">Scan · Understand · Decide</div>
+
 <div class="card">
   <input id="barcode" placeholder="Enter barcode">
-  <button class="scanBtn" onclick="toggleCamera()">📷 Scan</button>
-  <button class="checkBtn" onclick="analyze()">Analyze</button>
-  <video id="video"></video>
+
+  <input 
+    type="file" 
+    accept="image/*" 
+    capture="environment"
+    id="cameraInput"
+  >
+
+  <button class="checkBtn" onclick="checkFood()">Check Food</button>
 </div>
 
-<div id="result" class="hidden">
-
-<div class="card center">
-  <div class="scoreWrap">
-    <div id="scoreCircle" class="scoreCircle">
-      0
-      <span>SCORE</span>
-    </div>
-  </div>
-  <h2 id="pname">Product</h2>
-  <div id="brand" class="small"></div>
+<div class="tabs">
+  <div class="tab active" onclick="openTab('home')">Home</div>
+  <div class="tab" onclick="openTab('overview')">Overview</div>
+  <div class="tab" onclick="openTab('nutrition')">Nutrition</div>
+  <div class="tab" onclick="openTab('ingredients')">Ingredients</div>
 </div>
 
-<div class="card">
-  <h3>Nutritional Profile (100g)</h3>
-
-  <div class="barRow">
-    <div class="barLabel"><span>Sugar</span><span id="sugarVal"></span></div>
-    <div class="bar"><div id="sugarBar" class="barFill"></div></div>
-  </div>
-
-  <div class="barRow">
-    <div class="barLabel"><span>Total Fat</span><span id="fatVal"></span></div>
-    <div class="bar"><div id="fatBar" class="barFill"></div></div>
-  </div>
-
-  <div class="barRow">
-    <div class="barLabel"><span>Energy</span><span id="energyVal"></span></div>
-    <div class="bar"><div id="energyBar" class="barFill"></div></div>
-  </div>
+<div id="home" class="card">
+  <h3>Nutri Score</h3>
+  <ul>
+    <li>🟢 70–100 → Healthy</li>
+    <li>🟡 40–69 → Moderate</li>
+    <li>🔴 0–39 → Unhealthy</li>
+  </ul>
 </div>
 
-<div class="card">
-  <div class="processCard">
-    PROCESSING LEVEL<br>
-    <span id="nova">NOVA Group 4</span>
-  </div>
-</div>
+<div id="overview" class="card hidden"></div>
+<div id="nutrition" class="card hidden"></div>
+<div id="ingredients" class="card hidden"></div>
 
-<div class="card">
-  <h3>Ingredients</h3>
-  <p id="ingredients" class="small"></p>
-</div>
+<footer>
+Data source: Open Food Facts<br>
+Results are indicative, not medical advice
+</footer>
 
-</div>
 </div>
 
 <script>
 const codeReader = new ZXing.BrowserMultiFormatReader();
-let cameraOn=false;
 
-function toggleCamera(){
-  const video=document.getElementById("video");
-  if(!cameraOn){
-    cameraOn=true;
-    video.style.display="block";
-    codeReader.decodeFromVideoDevice(null,"video",(res,err)=>{
-      if(res){
-        barcode.value=res.text;
-        toggleCamera();
-        analyze();
-      }
-    });
-  }else{
-    cameraOn=false;
-    codeReader.reset();
-    video.style.display="none";
+document.getElementById("cameraInput").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+
+  const img = document.createElement("img");
+  img.src = URL.createObjectURL(file);
+
+  img.onload = async () => {
+    try{
+      const result = await codeReader.decodeFromImage(img);
+      document.getElementById("barcode").value = result.text;
+      checkFood();
+    }catch{
+      alert("Could not read barcode. Try again.");
+    }
+  };
+});
+
+function openTab(id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#home,#overview,#nutrition,#ingredients')
+    .forEach(d=>d.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  event.target.classList.add('active');
+}
+
+async function checkFood(){
+  const code = barcode.value.trim();
+  if(!code){ alert("Enter barcode"); return; }
+
+  openTab('overview');
+
+  const res = await fetch(`/api/check/${code}`);
+  const data = await res.json();
+
+  if(data.error){
+    overview.innerHTML = "❌ Product not found";
+    return;
   }
+
+  const sugar = data.sugar || 0;
+  const fat = data.fat || 0;
+  const fiber = data.fiber || 0;
+
+  let score = 100;
+  if(sugar > 8) score -= 40;
+  if(fat > 5) score -= 30;
+  if(fiber < 2) score -= 20;
+
+  score = Math.max(0, score);
+
+  let cls="healthy", label="Healthy";
+  if(score<40){cls="unhealthy";label="Unhealthy";}
+  else if(score<70){cls="moderate";label="Moderate";}
+
+  overview.innerHTML = `
+    <div class="score ${cls}">${score}</div>
+    <div style="text-align:center">
+      <b>${data.productName}</b><br>${label}
+    </div>
+
+    <h4>🔁 Better Brand</h4>
+    <p>${data.alternativeBrand || "No better brand found"}</p>
+  `;
+
+  nutrition.innerHTML = `
+    <p>Sugar: ${sugar} g</p>
+    <p>Fat: ${fat} g</p>
+    <p>Fiber: ${fiber} g</p>
+    <p>Energy: ${data.energy || 0} kcal</p>
+  `;
+
+  ingredients.innerHTML = `
+    <p>${data.ingredients || "Not available"}</p>
+    <h4>Ingredient Risk</h4>
+    <p class="bad">${data.ingredientAnalysis.harmful.join(", ") || "None"}</p>
+    <p class="good">${data.ingredientAnalysis.safe.join(", ") || ""}</p>
+  `;
 }
 
-async function analyze(){
-  const code=barcode.value.trim();
-  if(!code) return alert("Enter barcode");
-
-  const res=await fetch(`/api/check/${code}`);
-  const data=await res.json();
-  if(data.error) return alert("Not found");
-
-  result.classList.remove("hidden");
-
-  const sugar=parseFloat(data.sugar)||0;
-  const fat=parseFloat(data.fat)||0;
-  const energy=parseFloat(data.energy)||0;
-
-  let score=100 - (sugar*4) - (fat*3);
-  score=Math.max(0,Math.min(100,Math.round(score)));
-
-  pname.innerText=data.productName;
-  brand.innerText=data.brand || "";
-  scoreCircle.innerHTML=score+"<span>SCORE</span>";
-
-  if(score<40) scoreCircle.style.color="#ef5350";
-  else if(score<70) scoreCircle.style.color="#ffb74d";
-  else scoreCircle.style.color="#4caf50";
-
-  sugarVal.innerText=sugar+"g";
-  fatVal.innerText=fat+"g";
-  energyVal.innerText=energy+" kcal";
-
-  sugarBar.style.width=Math.min(sugar,60)/60*100+"%";
-  fatBar.style.width=Math.min(fat,40)/40*100+"%";
-  energyBar.style.width=Math.min(energy,400)/400*100+"%";
-
-  ingredients.innerText=data.ingredients || "Not available";
-}
-
-if("serviceWorker"in navigator){
+if("serviceWorker" in navigator){
   navigator.serviceWorker.register("service-worker.js");
 }
 </script>
+
 </body>
 </html>
