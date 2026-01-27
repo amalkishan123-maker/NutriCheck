@@ -244,10 +244,34 @@ async function checkFood(){
       <div class="barFill" style="width:${Math.min(energy,400)/400*100}%"></div>
     </div>
   </div>
-  `;
 
-  ingredients.innerHTML = `<p>${data.ingredientsList || "Not available"}</p>`;
-}
+  ingredients.innerHTML = `
+  <h3>🧪 Chemical Analysis</h3>
+
+  <p class="bad"><b>Harmful</b></p>
+  <ul>
+    ${data.ingredientAnalysis.harmful.length 
+      ? data.ingredientAnalysis.harmful.map(i=>`<li>${i}</li>`).join("") 
+      : "<li>None detected</li>"}
+  </ul>
+
+  <p class="value mid"><b>Use with caution</b></p>
+  <ul>
+    ${data.ingredientAnalysis.caution.length 
+      ? data.ingredientAnalysis.caution.map(i=>`<li>${i}</li>`).join("") 
+      : "<li>None detected</li>"}
+  </ul>
+
+  <p class="good"><b>Generally safe</b></p>
+  <ul>
+    ${data.ingredientAnalysis.safe.length 
+      ? data.ingredientAnalysis.safe.map(i=>`<li>${i}</li>`).join("") 
+      : "<li>Basic ingredients</li>"}
+  </ul>
+
+  <h3>📋 Full Ingredients</h3>
+  <p>${data.ingredientsList || "Not available"}</p>
+`;
 
 if("serviceWorker" in navigator){
   navigator.serviceWorker.register("service-worker.js");
