@@ -212,12 +212,64 @@ async function checkFood(){
     <p>Energy: ${data.energy || 0} kcal</p>
   `;
 
-  ingredients.innerHTML = `
-    <p>${data.ingredients || "Not available"}</p>
-    <h4>Ingredient Risk</h4>
-    <p class="bad">${data.ingredientAnalysis.harmful.join(", ") || "None"}</p>
-    <p class="good">${data.ingredientAnalysis.safe.join(", ") || ""}</p>
-  `;
+ nutrition.innerHTML = `
+<h2>Nutritional Profile (100g)</h2>
+
+<div class="barRow">
+  <div class="barLabel">
+    <span>Sugar Content</span>
+    <span>${sugar}g</span>
+  </div>
+  <div class="bar">
+    <div class="barFill" style="width:${Math.min(sugar,60)/60*100}%"></div>
+  </div>
+</div>
+
+<div class="barRow">
+  <div class="barLabel">
+    <span>Total Fat</span>
+    <span>${fat}g</span>
+  </div>
+  <div class="bar">
+    <div class="barFill" style="width:${Math.min(fat,40)/40*100}%"></div>
+  </div>
+</div>
+
+<div class="barRow">
+  <div class="barLabel">
+    <span>Energy (Calories)</span>
+    <span>${energy} kcal</span>
+  </div>
+  <div class="bar">
+    <div class="barFill" style="width:${Math.min(energy,400)/400*100}%"></div>
+  </div>
+</div>
+`;
+
+let cameraOn = false;
+let stream = null;
+const codeReader = new ZXing.BrowserMultiFormatReader();
+
+function toggleCamera(){
+  const video = document.getElementById("video");
+
+  if(!cameraOn){
+    cameraOn = true;
+    video.style.display = "block";
+
+    codeReader.decodeFromVideoDevice(null, "video", (res, err) => {
+      if(res){
+        barcode.value = res.text;
+        toggleCamera();   // auto off
+        checkFood();      // auto analyze
+      }
+    });
+
+  } else {
+    cameraOn = false;
+    codeReader.reset();
+    video.style.display = "none";
+  }
 }
 
 if("serviceWorker" in navigator){
