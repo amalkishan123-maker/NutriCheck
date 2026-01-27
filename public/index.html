@@ -2,97 +2,110 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>NutriCheck Pro</title>
+<title>Nutri</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://unpkg.com/@zxing/library@latest"></script>
 
 <style>
-:root {
-  --bg:#050505;
-  --card:#121212;
-  --border:rgba(255,255,255,0.1);
-  --primary:#00ff95;
-  --danger:#ff4757;
-  --warning:#ffa502;
+:root{
+  --green:#2ecc71;
+  --red:#e74c3c;
+  --orange:#f39c12;
+  --bg:#f4f6f8;
+  --card:#ffffff;
+  --text:#222;
+  --muted:#777;
 }
 
 body{
   margin:0;
-  font-family:Inter,system-ui;
+  font-family: system-ui, -apple-system;
   background:var(--bg);
-  color:white;
+  color:var(--text);
 }
 
 header{
-  padding:20px;
+  background:var(--green);
+  color:white;
+  padding:18px;
   text-align:center;
   font-size:22px;
-  font-weight:800;
-  border-bottom:1px solid var(--border);
+  font-weight:700;
 }
 
 #scanner{
-  position:relative;
-  height:280px;
+  height:260px;
   background:black;
+  position:relative;
 }
-video{width:100%;height:100%;object-fit:cover}
+
+video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
 .scan-box{
   position:absolute;
-  top:50%;left:50%;
+  top:50%;
+  left:50%;
   transform:translate(-50%,-50%);
-  width:260px;height:160px;
-  border:2px solid var(--primary);
-  border-radius:16px;
+  width:220px;
+  height:140px;
+  border:3px solid white;
+  border-radius:12px;
 }
 
 .container{
-  padding:20px;
+  padding:16px;
   max-width:420px;
   margin:auto;
 }
 
 .card{
   background:var(--card);
-  border:1px solid var(--border);
-  border-radius:20px;
-  padding:18px;
-  margin-bottom:16px;
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:14px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
 }
 
 input{
   width:100%;
-  background:#000;
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:14px;
-  color:white;
-  text-align:center;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid #ddd;
   font-size:16px;
+  margin-bottom:10px;
 }
 
 button{
   width:100%;
-  padding:16px;
-  margin-top:12px;
-  background:var(--primary);
+  padding:14px;
+  background:var(--green);
   border:none;
-  border-radius:14px;
-  font-weight:700;
+  border-radius:12px;
+  color:white;
   font-size:16px;
+  font-weight:600;
 }
 
-.score-circle{
-  width:120px;height:120px;
+.score{
+  width:120px;
+  height:120px;
   border-radius:50%;
-  border:8px solid var(--primary);
+  margin:auto;
   display:flex;
   align-items:center;
   justify-content:center;
   font-size:32px;
-  font-weight:900;
-  margin:auto;
+  font-weight:800;
+  color:white;
 }
+
+.score.good{background:var(--green)}
+.score.mid{background:var(--orange)}
+.score.bad{background:var(--red)}
 
 .grid{
   display:grid;
@@ -101,35 +114,30 @@ button{
 }
 
 .stat{
-  background:#1a1a1a;
-  padding:12px;
-  border-radius:14px;
+  background:#f2f2f2;
+  border-radius:10px;
+  padding:10px;
+  text-align:center;
 }
 
-.label{font-size:11px;color:#777;text-transform:uppercase}
+.label{font-size:12px;color:var(--muted)}
 .value{font-size:18px;font-weight:600}
 
 .tag{
   display:inline-block;
-  background:rgba(255,71,87,.15);
-  color:var(--danger);
-  padding:6px 12px;
+  background:#ffe6e6;
+  color:var(--red);
+  padding:4px 10px;
   border-radius:20px;
   font-size:12px;
-  margin:4px;
-}
-
-.section-title{
-  font-weight:700;
-  margin-bottom:10px;
-  color:var(--primary);
+  margin:3px;
 }
 </style>
 </head>
 
 <body>
 
-<header>🥗 NutriCheck Pro</header>
+<header>🥗 Nutri</header>
 
 <div id="scanner">
   <video id="video"></video>
@@ -140,20 +148,17 @@ button{
 
 <div class="card">
   <input id="barcode" placeholder="Scan or enter barcode">
-  <button onclick="analyze()">Analyze Product</button>
+  <button onclick="analyze()">Check Food</button>
 </div>
 
-<!-- OVERVIEW -->
 <div id="overview" class="card" style="display:none">
-  <div class="section-title">Health Score</div>
-  <div id="score" class="score-circle">--</div>
-  <h2 id="prod-name" style="text-align:center"></h2>
-  <p id="swap" style="text-align:center;color:#aaa"></p>
+  <div id="scoreBox" class="score">--</div>
+  <h2 id="productName" style="text-align:center"></h2>
+  <p id="swapText" style="text-align:center;color:var(--muted)"></p>
 </div>
 
-<!-- NUTRITION -->
 <div id="nutrition" class="card" style="display:none">
-  <div class="section-title">Nutrition</div>
+  <h3>Nutrition</h3>
   <div class="grid">
     <div class="stat"><div class="label">Sugar</div><div id="sugar" class="value"></div></div>
     <div class="stat"><div class="label">Energy</div><div id="energy" class="value"></div></div>
@@ -162,13 +167,12 @@ button{
   </div>
 </div>
 
-<!-- INGREDIENTS -->
 <div id="ingredients" class="card" style="display:none">
-  <div class="section-title">Harmful Additives</div>
+  <h3>Harmful Additives</h3>
   <div id="harmful"></div>
 
-  <div class="section-title" style="margin-top:14px">Full Ingredients</div>
-  <p id="full" style="font-size:13px;color:#bbb"></p>
+  <h3>Ingredients</h3>
+  <p id="fullIngredients" style="font-size:14px;color:var(--muted)"></p>
 </div>
 
 </div>
@@ -190,16 +194,14 @@ async function analyze(){
   ingredients.style.display="block";
 
   const sugarVal = parseFloat(data.sugar)||0;
-  let scoreVal = Math.max(0,100 - sugarVal*4);
+  let score = Math.max(0,100 - sugarVal*4);
 
-  score.innerText = scoreVal.toFixed(0);
-  score.style.borderColor =
-    scoreVal>70? "var(--primary)" :
-    scoreVal>40? "var(--warning)" :
-    "var(--danger)";
+  let cls = score>70?"good":score>40?"mid":"bad";
+  scoreBox.className = "score "+cls;
+  scoreBox.innerText = score.toFixed(0);
 
-  prod-name.innerText = data.productName;
-  swap.innerText = "Better option: "+data.alternativeBrand;
+  productName.innerText = data.productName;
+  swapText.innerText = "Better option: "+data.alternativeBrand;
 
   sugar.innerText = sugarVal+" g";
   fat.innerText = (data.fat||0)+" g";
@@ -209,11 +211,15 @@ async function analyze(){
   harmful.innerHTML = data.ingredientAnalysis.harmful
     .map(h=>`<span class="tag">${h}</span>`).join("");
 
-  full.innerText = data.ingredients || "Not available";
+  fullIngredients.innerText = data.ingredients || "Not available";
 }
+</script>
+
 <script>
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/service-worker.js");
 }
+</script>
+
 </body>
 </html>
