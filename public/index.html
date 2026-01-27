@@ -205,12 +205,7 @@ async function checkFood(){
     <p>${data.alternativeBrand || "No better brand found"}</p>
   `;
 
-  nutrition.innerHTML = `
-    <p>Sugar: ${sugar} g</p>
-    <p>Fat: ${fat} g</p>
-    <p>Fiber: ${fiber} g</p>
-    <p>Energy: ${data.energy || 0} kcal</p>
-  `;
+  
 
  nutrition.innerHTML = `
 <h2>Nutritional Profile (100g)</h2>
