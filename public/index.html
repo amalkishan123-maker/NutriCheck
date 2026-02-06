@@ -94,11 +94,32 @@ button{font-weight:bold;cursor:pointer}
 
 footer{text-align:center;font-size:12px;color:#888;margin-top:12px}
 
-/* BAR STYLES */
+/* NUTRITION BARS */
 .barRow{margin-bottom:12px}
 .barLabel{display:flex;justify-content:space-between;font-size:14px}
 .bar{background:#222;border-radius:8px;height:10px;overflow:hidden}
 .barFill{background:#4caf50;height:100%}
+
+/* PROCESSING BARS (FIX ADDED) */
+.progress{
+  background:#222;
+  border-radius:8px;
+  height:10px;
+  overflow:hidden;
+  margin-bottom:10px;
+}
+
+.progressFill{
+  height:100%;
+}
+
+.progressFill.green{
+  background:#4caf50;
+}
+
+.progressFill.red{
+  background:#ef5350;
+}
 </style>
 </head>
 
@@ -236,28 +257,19 @@ async function checkFood(){
   `;
 
   ingredients.innerHTML = `
-  <!-- EXISTING CHEMICAL ANALYSIS (KEEP AS IS) -->
   <h3>🧪 Chemical Analysis</h3>
 
   <p class="bad"><b>Harmful</b></p>
-  <ul>
-    <li>None detected</li>
-  </ul>
+  <ul><li>None detected</li></ul>
 
   <p><b>Use with caution</b></p>
-  <ul>
-    <li>None detected</li>
-  </ul>
+  <ul><li>None detected</li></ul>
 
   <p class="good"><b>Safe</b></p>
-  <ul>
-    <li>No high-risk additives detected</li>
-  </ul>
+  <ul><li>No high-risk additives detected</li></ul>
 
   <h3>📋 Full Ingredients</h3>
   <p>${data.ingredientsList || "Ingredients not available"}</p>
-
-  <!-- 🔽 ADD NEW SECTION BELOW 🔽 -->
 
   <hr style="margin:16px 0;opacity:0.2">
 
@@ -270,14 +282,10 @@ async function checkFood(){
   <h3>Natural vs Processed</h3>
 
   <p class="good">Natural: 71%</p>
-  <div class="progress">
-    <div class="progressFill green" style="width:71%"></div>
-  </div>
+  <div class="progress"><div class="progressFill green" style="width:71%"></div></div>
 
   <p class="bad">Artificial / Processed: 29%</p>
-  <div class="progress">
-    <div class="progressFill red" style="width:29%"></div>
-  </div>
+  <div class="progress"><div class="progressFill red" style="width:29%"></div></div>
 
   <h3>Overall Healthiness Score</h3>
   <h2 style="color:#ffb74d">${score} / 100</h2>
@@ -290,12 +298,14 @@ async function checkFood(){
         : "<li>No clearly healthy ingredients identified</li>"
     }
   </ul>
-`;
+  `;
+}
 
-
+/* SERVICE WORKER (FIXED POSITION) */
 if("serviceWorker" in navigator){
   navigator.serviceWorker.register("service-worker.js");
 }
 </script>
 </body>
 </html>
+```0
