@@ -265,8 +265,16 @@ async function checkFood(){
   if(sugar>12 || harmful.length>2) risk="HIGH";
   else if(sugar>6 || caution.length>1) risk="MEDIUM";
 
-  const natural = Math.max(10, 100 - (count*3 + harmful.length*8));
-  const processed = 100 - natural;
+  
+let natural = 50;
+let processed = 50;
+
+if(count > 0){
+  natural = Math.max(10, 100 - (count*3 + harmful.length*8));
+  processed = 100 - natural;
+}
+
+
 
   ingredients.innerHTML = `
   <h3>🧪 Chemical Analysis</h3>
@@ -291,7 +299,7 @@ async function checkFood(){
   <p>Total Ingredients: <b>${count || "Unknown"}</b></p>
   <p>Ultra Processed: <b style="color:#ef5350">${ultra}</b></p>
 
-  <h3>🧠 AI Health Risk</h3>
+  <h3>🧠 Health Risk</h3>
   <h2 style="color:${risk==='HIGH'?'#ef5350':risk==='MEDIUM'?'#ffb74d':'#4caf50'}">${risk}</h2>
 
   <h3>Natural vs Processed</h3>
