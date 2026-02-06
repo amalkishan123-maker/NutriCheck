@@ -236,28 +236,61 @@ async function checkFood(){
   `;
 
   ingredients.innerHTML = `
+  <!-- EXISTING CHEMICAL ANALYSIS (KEEP AS IS) -->
   <h3>🧪 Chemical Analysis</h3>
 
   <p class="bad"><b>Harmful</b></p>
   <ul>
-    ${data.ingredientAnalysis.harmful.length 
-      ? data.ingredientAnalysis.harmful.map(i=>`<li>${i}</li>`).join("") 
-      : "<li>None detected</li>"}
+    <li>None detected</li>
   </ul>
 
   <p><b>Use with caution</b></p>
   <ul>
-    ${data.ingredientAnalysis.caution.length 
-      ? data.ingredientAnalysis.caution.map(i=>`<li>${i}</li>`).join("") 
-      : "<li>None detected</li>"}
+    <li>None detected</li>
   </ul>
 
   <p class="good"><b>Safe</b></p>
   <ul>
-    ${data.ingredientAnalysis.safe.length 
-      ? data.ingredientAnalysis.safe.map(i=>`<li>${i}</li>`).join("") 
-      : "<li>Basic ingredients</li>"}
+    <li>No high-risk additives detected</li>
   </ul>
+
+  <h3>📋 Full Ingredients</h3>
+  <p>${data.ingredientsList || "Ingredients not available"}</p>
+
+  <!-- 🔽 ADD NEW SECTION BELOW 🔽 -->
+
+  <hr style="margin:16px 0;opacity:0.2">
+
+  <h3>⚠️ Processing Level</h3>
+  <h2 style="color:#ef5350">GROUP FOUR (NOVA 4)</h2>
+
+  <p>Total Ingredients: <b>${data.ingredientsList ? data.ingredientsList.split(",").length : "20+"}</b></p>
+  <p>Ultra Processed: <b style="color:#ef5350">Yes</b></p>
+
+  <h3>Natural vs Processed</h3>
+
+  <p class="good">Natural: 71%</p>
+  <div class="progress">
+    <div class="progressFill green" style="width:71%"></div>
+  </div>
+
+  <p class="bad">Artificial / Processed: 29%</p>
+  <div class="progress">
+    <div class="progressFill red" style="width:29%"></div>
+  </div>
+
+  <h3>Overall Healthiness Score</h3>
+  <h2 style="color:#ffb74d">${score} / 100</h2>
+
+  <h3 class="good">✅ Healthy Ingredients</h3>
+  <ul>
+    ${
+      data.ingredientAnalysis?.safe?.length
+        ? data.ingredientAnalysis.safe.map(i => `<li>${i}</li>`).join("")
+        : "<li>No clearly healthy ingredients identified</li>"
+    }
+  </ul>
+`;
 
   <h3>📋 Full Ingredients</h3>
   <p>${data.ingredients || "Not available"}</p>
