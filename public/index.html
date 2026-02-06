@@ -100,7 +100,7 @@ footer{text-align:center;font-size:12px;color:#888;margin-top:12px}
 .bar{background:#222;border-radius:8px;height:10px;overflow:hidden}
 .barFill{background:#4caf50;height:100%}
 
-/* PROCESSING BARS (FIX ADDED) */
+/* PROCESSING BARS */
 .progress{
   background:#222;
   border-radius:8px;
@@ -108,18 +108,9 @@ footer{text-align:center;font-size:12px;color:#888;margin-top:12px}
   overflow:hidden;
   margin-bottom:10px;
 }
-
-.progressFill{
-  height:100%;
-}
-
-.progressFill.green{
-  background:#4caf50;
-}
-
-.progressFill.red{
-  background:#ef5350;
-}
+.progressFill{height:100%}
+.progressFill.green{background:#4caf50}
+.progressFill.red{background:#ef5350}
 </style>
 </head>
 
@@ -256,56 +247,70 @@ async function checkFood(){
   </div>
   `;
 
+  /* REAL CHEMICAL DATA */
+  const harmful = data.ingredientAnalysis?.harmful || [];
+  const caution = data.ingredientAnalysis?.caution || [];
+  const safe = data.ingredientAnalysis?.safe || [];
+
+  /* REAL NOVA DETECTION */
+  const count = data.ingredientsList ? data.ingredientsList.split(",").length : 0;
+  let nova = 1, novaText="Unprocessed", ultra="No";
+
+  if(harmful.length > 2 || count > 15){ nova=4; novaText="Ultra Processed"; ultra="Yes"; }
+  else if(count > 8){ nova=3; novaText="Processed"; }
+  else if(count > 4){ nova=2; novaText="Processed Ingredients"; }
+
+  /* AI RISK */
+  let risk="LOW";
+  if(sugar>12 || harmful.length>2) risk="HIGH";
+  else if(sugar>6 || caution.length>1) risk="MEDIUM";
+
+  const natural = Math.max(10, 100 - (count*3 + harmful.length*8));
+  const processed = 100 - natural;
+
   ingredients.innerHTML = `
   <h3>🧪 Chemical Analysis</h3>
 
   <p class="bad"><b>Harmful</b></p>
-  <ul><li>None detected</li></ul>
+  <ul>${harmful.length ? harmful.map(i=>`<li>${i}</li>`).join("") : "<li>None detected</li>"}</ul>
 
   <p><b>Use with caution</b></p>
-  <ul><li>None detected</li></ul>
+  <ul>${caution.length ? caution.map(i=>`<li>${i}</li>`).join("") : "<li>None detected</li>"}</ul>
 
   <p class="good"><b>Safe</b></p>
-  <ul><li>No high-risk additives detected</li></ul>
+  <ul>${safe.length ? safe.map(i=>`<li>${i}</li>`).join("") : "<li>No high-risk additives detected</li>"}</ul>
 
   <h3>📋 Full Ingredients</h3>
   <p>${data.ingredientsList || "Ingredients not available"}</p>
 
-  <hr style="margin:16px 0;opacity:0.2">
+  <hr>
 
   <h3>⚠️ Processing Level</h3>
-  <h2 style="color:#ef5350">GROUP FOUR (NOVA 4)</h2>
+  <h2 style="color:#ef5350">GROUP ${nova} (${novaText})</h2>
 
-  <p>Total Ingredients: <b>${data.ingredientsList ? data.ingredientsList.split(",").length : "20+"}</b></p>
-  <p>Ultra Processed: <b style="color:#ef5350">Yes</b></p>
+  <p>Total Ingredients: <b>${count || "Unknown"}</b></p>
+  <p>Ultra Processed: <b style="color:#ef5350">${ultra}</b></p>
+
+  <h3>🧠 AI Health Risk</h3>
+  <h2 style="color:${risk==='HIGH'?'#ef5350':risk==='MEDIUM'?'#ffb74d':'#4caf50'}">${risk}</h2>
 
   <h3>Natural vs Processed</h3>
 
-  <p class="good">Natural: 71%</p>
-  <div class="progress"><div class="progressFill green" style="width:71%"></div></div>
+  <p class="good">Natural: ${natural}%</p>
+  <div class="progress"><div class="progressFill green" style="width:${natural}%"></div></div>
 
-  <p class="bad">Artificial / Processed: 29%</p>
-  <div class="progress"><div class="progressFill red" style="width:29%"></div></div>
+  <p class="bad">Processed: ${processed}%</p>
+  <div class="progress"><div class="progressFill red" style="width:${processed}%"></div></div>
 
   <h3>Overall Healthiness Score</h3>
   <h2 style="color:#ffb74d">${score} / 100</h2>
-
-  <h3 class="good">✅ Healthy Ingredients</h3>
-  <ul>
-    ${
-      data.ingredientAnalysis?.safe?.length
-        ? data.ingredientAnalysis.safe.map(i => `<li>${i}</li>`).join("")
-        : "<li>No clearly healthy ingredients identified</li>"
-    }
-  </ul>
   `;
 }
 
-/* SERVICE WORKER (FIXED POSITION) */
 if("serviceWorker" in navigator){
   navigator.serviceWorker.register("service-worker.js");
 }
 </script>
 </body>
 </html>
-```0
+'''aa
