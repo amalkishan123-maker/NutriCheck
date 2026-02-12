@@ -132,6 +132,9 @@ app.get("/api/check/:barcode", async (req, res) => {
   }
 });
 
-app.listen(4000, () => {
-  console.log("Backend running at http://localhost:4000");
+const PORT = process.env.PORT || 4000;
+
+app.listen(PORT, () => {
+  console.log("Backend running on port " + PORT);
 });
+
