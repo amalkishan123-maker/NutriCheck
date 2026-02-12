@@ -208,8 +208,8 @@ async function checkFood(){
   const fat = data.fat || 0;
   const fiber = data.fiber || 0;
   const energy = data.energy || 0;
-  
-  let score = data.score;
+
+  let score = data.score || 50;
 
   let cls="healthy", label="Healthy";
   if(score<40){cls="unhealthy";label="Unhealthy";}
@@ -243,7 +243,7 @@ async function checkFood(){
   </div>
   `;
 
-ingredients.innerHTML = `
+  ingredients.innerHTML = `
 <h3>🧪 Chemical Analysis</h3>
 
 <p class="bad"><b>Harmful</b></p>
@@ -309,11 +309,10 @@ ingredients.innerHTML = `
 <h2 style="color:#ffb74d">${score} / 100</h2>
 `;
 }
-  
+
 if("serviceWorker" in navigator){
   navigator.serviceWorker.register("service-worker.js");
 }
 </script>
 </body>
 </html>
-'''mmm
