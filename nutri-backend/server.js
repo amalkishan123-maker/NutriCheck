@@ -1,19 +1,28 @@
 const express = require("express");
 const fetch = require("node-fetch");
 const cors = require("cors");
+const path = require("path");
 
 const app = express();
-app.use(cors());
-app.use(express.static("public"));
 
+app.use(cors());
+
+/* SERVE FRONTEND FILES */
+app.use(express.static(path.join(__dirname, "public")));
+
+/* MAIN API */
 app.get("/api/check/:barcode", async (req, res) => {
   try {
     const code = req.params.barcode;
 
-    const r = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
+    const r = await fetch(
+      `https://world.openfoodfacts.org/api/v0/product/${code}.json`
+    );
+
     const d = await r.json();
 
-    if (!d.product) {
+    /* FIX 1: correct product check */
+    if (!d || d.status === 0 || !d.product) {
       return res.json({ error: "Product not found" });
     }
 
@@ -28,16 +37,22 @@ app.get("/api/check/:barcode", async (req, res) => {
     const ingredientsText = (p.ingredients_text || "").toLowerCase();
     const ingredientsList = p.ingredients_text || "Ingredients not available";
 
-    // ---------------- SCORE ----------------
+    /* SCORE */
     let score = 100;
     if (sugar > 8) score -= 40;
     if (fat > 5) score -= 30;
     if (fiber < 2) score -= 20;
     score = Math.max(0, score);
 
-    // ---------------- INGREDIENT THINKING ----------------
+    /* INGREDIENT ANALYSIS */
     const harmfulList = ["aspartame", "msg", "hfcs", "high fructose", "e150d"];
-    const cautionList = ["preservative", "emulsifier", "stabilizer", "artificial", "sweetener"];
+    const cautionList = [
+      "preservative",
+      "emulsifier",
+      "stabilizer",
+      "artificial",
+      "sweetener"
+    ];
 
     let harmful = [];
     let caution = [];
@@ -55,29 +70,35 @@ app.get("/api/check/:barcode", async (req, res) => {
       safe.push("Mostly natural ingredients");
     }
 
-    // ---------------- NOVA DETECTION ----------------
-    const ingredientCount = ingredientsText.split(",").length;
+    /* FIX 2: better NOVA detection */
+    const ingredientCount = ingredientsText
+      ? ingredientsText.split(",").length
+      : 0;
 
     let novaGroup = "NOVA 1";
     if (ingredientCount > 5) novaGroup = "NOVA 2";
     if (ingredientCount > 10 || caution.length > 0) novaGroup = "NOVA 3";
     if (ingredientCount > 15 || harmful.length > 0) novaGroup = "NOVA 4";
 
-    // ---------------- NATURAL VS ARTIFICIAL % ----------------
-    const totalSignals = harmful.length + caution.length + 1;
+    /* NATURAL VS ARTIFICIAL */
+    const artificialPercent = Math.min(
+      80,
+      harmful.length * 20 + caution.length * 10
+    );
 
-    const artificialPercent = Math.min(80, (harmful.length * 20) + (caution.length * 10));
     const naturalPercent = 100 - artificialPercent;
 
-    // ---------------- AI HEALTH RISK ----------------
+    /* AI HEALTH RISKS */
     let healthRisks = [];
 
     if (sugar > 15) healthRisks.push("High diabetes risk");
     if (fat > 10) healthRisks.push("Heart disease risk");
-    if (novaGroup === "NOVA 4") healthRisks.push("Ultra processed — obesity risk");
-    if (harmful.length > 0) healthRisks.push("Contains chemical additives");
+    if (novaGroup === "NOVA 4")
+      healthRisks.push("Ultra processed — obesity risk");
+    if (harmful.length > 0)
+      healthRisks.push("Contains chemical additives");
 
-    // ---------------- BETTER BRAND SEARCH ----------------
+    /* BETTER BRAND */
     let alternativeBrand = "Better alternative not found";
 
     const categories = (p.categories || "").split(",")[0];
@@ -97,6 +118,7 @@ app.get("/api/check/:barcode", async (req, res) => {
           if (prod.code === code) continue;
 
           const ps = prod.nutriments.sugars_100g;
+
           if (ps != null && ps < sugar) {
             alternativeBrand =
               `${prod.brands || "Other brand"} - ${prod.product_name}`;
@@ -106,7 +128,7 @@ app.get("/api/check/:barcode", async (req, res) => {
       }
     }
 
-    // ---------------- FINAL RESPONSE ----------------
+    /* FINAL RESPONSE */
     res.json({
       productName: p.product_name || "Food Item",
       sugar,
@@ -119,7 +141,7 @@ app.get("/api/check/:barcode", async (req, res) => {
       artificialPercent,
       healthRisks,
       alternativeBrand,
-      ingredients: ingredientsList,
+      ingredientsList,
       ingredientAnalysis: {
         harmful,
         caution,
@@ -133,12 +155,14 @@ app.get("/api/check/:barcode", async (req, res) => {
   }
 });
 
+/* FIX 3: correct root route */
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+/* START SERVER */
 const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, () => {
   console.log("Backend running on port " + PORT);
 });
-app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/public/index.html");
-});
-
