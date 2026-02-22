@@ -5,6 +5,7 @@ const path = require("path");
 const app = express();
 
 app.use(cors());
+app.use(express.json());
 
 /* SERVE FRONTEND FILES */
 app.use(express.static(path.join(__dirname, "public")));
