@@ -1,18 +1,18 @@
 const express = require("express");
-const fetch = (...args) =>
-  import("node-fetch").then(({default: fetch}) => fetch(...args));
 const cors = require("cors");
 const path = require("path");
+
+// node-fetch fix for CommonJS
+const fetch = (...args) =>
+  import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-
-/* SERVE FRONTEND FILES */
 app.use(express.static(path.join(__dirname, "public")));
 
-/* MAIN API */
+/* API ROUTE */
 app.get("/api/check/:barcode", async (req, res) => {
   try {
     const code = req.params.barcode;
@@ -23,12 +23,15 @@ app.get("/api/check/:barcode", async (req, res) => {
 
     const d = await r.json();
 
-    /* FIX 1: correct product check */
-    if (!d || d.status === 0 || !d.product) {
+    // 🔥 FIXED PRODUCT CHECK
+    if (!d || d.status === 0) {
       return res.json({ error: "Product not found" });
     }
 
-    const p = d.product;
+    console.log("STATUS:", d.status);
+    console.log("NAME:", d.product?.product_name);
+
+    const p = d.product || {};
     const n = p.nutriments || {};
 
     const sugar = n.sugars_100g ?? 0;
@@ -36,8 +39,15 @@ app.get("/api/check/:barcode", async (req, res) => {
     const fiber = n.fiber_100g ?? 0;
     const energy = n.energy_kcal_100g ?? 0;
 
-    const ingredientsText = (p.ingredients_text || "").toLowerCase();
-    const ingredientsList = p.ingredients_text || "Ingredients not available";
+    // 🔥 FIXED INGREDIENT SOURCE
+    const ingredientsText = (
+      p.ingredients_text ||
+      p.ingredients ||
+      ""
+    ).toLowerCase();
+
+    const ingredientsList =
+      p.ingredients_text || p.ingredients || "Ingredients not available";
 
     /* SCORE */
     let score = 100;
@@ -47,7 +57,18 @@ app.get("/api/check/:barcode", async (req, res) => {
     score = Math.max(0, score);
 
     /* INGREDIENT ANALYSIS */
-    const harmfulList = ["aspartame", "msg", "hfcs", "high fructose", "e150d"];
+    const harmfulList = [
+      "aspartame",
+      "e951",
+      "msg",
+      "e621",
+      "hfcs",
+      "high fructose",
+      "e150d",
+      "caramel color",
+      "e250"
+    ];
+
     const cautionList = [
       "preservative",
       "emulsifier",
@@ -56,81 +77,53 @@ app.get("/api/check/:barcode", async (req, res) => {
       "sweetener"
     ];
 
-    let harmful = [];
-    let caution = [];
+    let harmful = harmfulList.filter(i => ingredientsText.includes(i));
+    let caution = cautionList.filter(i => ingredientsText.includes(i));
     let safe = [];
-
-    harmfulList.forEach(i => {
-      if (ingredientsText.includes(i)) harmful.push(i);
-    });
-
-    cautionList.forEach(i => {
-      if (ingredientsText.includes(i)) caution.push(i);
-    });
 
     if (harmful.length === 0 && caution.length === 0) {
       safe.push("Mostly natural ingredients");
     }
 
-    /* FIX 2: better NOVA detection */
+    /* NOVA DETECTION */
     const ingredientCount = ingredientsText
       ? ingredientsText.split(",").length
       : 0;
 
     let novaGroup = "NOVA 1";
-    if (ingredientCount > 5) novaGroup = "NOVA 2";
-    if (ingredientCount > 10 || caution.length > 0) novaGroup = "NOVA 3";
-    if (ingredientCount > 15 || harmful.length > 0) novaGroup = "NOVA 4";
+
+    if (ingredientCount <= 3) novaGroup = "NOVA 1";
+    else if (ingredientCount <= 6) novaGroup = "NOVA 2";
+    else if (ingredientCount <= 12) novaGroup = "NOVA 3";
+    else novaGroup = "NOVA 4";
+
+    if (harmful.length > 0) novaGroup = "NOVA 4";
 
     /* NATURAL VS ARTIFICIAL */
     const artificialPercent = Math.min(
       80,
       harmful.length * 20 + caution.length * 10
     );
-
     const naturalPercent = 100 - artificialPercent;
 
     /* AI HEALTH RISKS */
     let healthRisks = [];
 
-    if (sugar > 15) healthRisks.push("High diabetes risk");
-    if (fat > 10) healthRisks.push("Heart disease risk");
+    if (sugar > 20)
+      healthRisks.push("Very high sugar — diabetes risk");
+    else if (sugar > 10)
+      healthRisks.push("Moderate sugar — limit intake");
+
+    if (fat > 15)
+      healthRisks.push("High fat — heart risk");
+
     if (novaGroup === "NOVA 4")
       healthRisks.push("Ultra processed — obesity risk");
+
     if (harmful.length > 0)
-      healthRisks.push("Contains chemical additives");
+      healthRisks.push("Contains harmful additives");
 
-    /* BETTER BRAND */
-    let alternativeBrand = "Better alternative not found";
-
-    const categories = (p.categories || "").split(",")[0];
-
-    if (categories) {
-      const searchUrl =
-        `https://world.openfoodfacts.org/cgi/search.pl?search_terms=` +
-        encodeURIComponent(categories) +
-        `&search_simple=1&action=process&json=1&page_size=10`;
-
-      const sr = await fetch(searchUrl);
-      const sd = await sr.json();
-
-      if (sd.products) {
-        for (const prod of sd.products) {
-          if (!prod.nutriments) continue;
-          if (prod.code === code) continue;
-
-          const ps = prod.nutriments.sugars_100g;
-
-          if (ps != null && ps < sugar) {
-            alternativeBrand =
-              `${prod.brands || "Other brand"} - ${prod.product_name}`;
-            break;
-          }
-        }
-      }
-    }
-
-    /* FINAL RESPONSE */
+    /* RESPONSE */
     res.json({
       productName: p.product_name || "Food Item",
       sugar,
@@ -142,7 +135,6 @@ app.get("/api/check/:barcode", async (req, res) => {
       naturalPercent,
       artificialPercent,
       healthRisks,
-      alternativeBrand,
       ingredientsList,
       ingredientAnalysis: {
         harmful,
@@ -157,12 +149,12 @@ app.get("/api/check/:barcode", async (req, res) => {
   }
 });
 
-/* FIX 3: correct root route */
+/* ROOT */
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-/* START SERVER */
+/* SERVER START */
 const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, () => {
