@@ -243,14 +243,16 @@ async function checkFood(){
   </div>
   `;
 
-  ingredients.innerHTML = `
+  const hasIngredients = data.ingredientsList && data.ingredientsList !== "Ingredients not available";
+
+ingredients.innerHTML = `
 <h3>🧪 Chemical Analysis</h3>
 
 <p class="bad"><b>Harmful</b></p>
 <ul>
   ${
     data.ingredientAnalysis?.harmful?.length
-      ? data.ingredientAnalysis.harmful.map(i=>`<li>${i}</li>`).join("")
+      ? data.ingredientAnalysis.harmful.map(i => `<li>${i}</li>`).join("")
       : "<li>None detected</li>"
   }
 </ul>
@@ -259,7 +261,7 @@ async function checkFood(){
 <ul>
   ${
     data.ingredientAnalysis?.caution?.length
-      ? data.ingredientAnalysis.caution.map(i=>`<li>${i}</li>`).join("")
+      ? data.ingredientAnalysis.caution.map(i => `<li>${i}</li>`).join("")
       : "<li>None detected</li>"
   }
 </ul>
@@ -268,47 +270,46 @@ async function checkFood(){
 <ul>
   ${
     data.ingredientAnalysis?.safe?.length
-      ? data.ingredientAnalysis.safe.map(i=>`<li>${i}</li>`).join("")
-      : "<li>Basic natural ingredients</li>"
+      ? data.ingredientAnalysis.safe.map(i => `<li>${i}</li>`).join("")
+      : "<li>No high-risk additives detected</li>"
   }
 </ul>
 
 <h3>📋 Full Ingredients</h3>
-<p>${data.ingredients || "Ingredients not available"}</p>
+<p>${data.ingredientsList}</p>
 
+${
+  hasIngredients
+    ? `
 <hr style="margin:16px 0;opacity:0.2">
 
 <h3>⚠️ Processing Level</h3>
 <h2 style="color:#ef5350">${data.novaGroup}</h2>
 
-<p>Total Ingredients: 
-<b>${data.ingredients ? data.ingredients.split(",").length : "Unknown"}</b></p>
-
-<h3>Natural vs Artificial</h3>
+<h3>📊 Natural vs Processed</h3>
 
 <p class="good">Natural: ${data.naturalPercent}%</p>
 <div class="progress">
   <div class="progressFill green" style="width:${data.naturalPercent}%"></div>
 </div>
 
-<p class="bad">Artificial: ${data.artificialPercent}%</p>
+<p class="bad">Processed: ${data.artificialPercent}%</p>
 <div class="progress">
   <div class="progressFill red" style="width:${data.artificialPercent}%"></div>
 </div>
 
-<h3>🧠 AI Health Risk Detection</h3>
+<h3>🧠 AI Health Risks</h3>
 <ul>
   ${
     data.healthRisks?.length
-      ? data.healthRisks.map(r=>`<li>${r}</li>`).join("")
+      ? data.healthRisks.map(r => `<li>${r}</li>`).join("")
       : "<li>No major risks detected</li>"
   }
 </ul>
-
-<h3>Overall Health Score</h3>
-<h2 style="color:#ffb74d">${score} / 100</h2>
-`;
+`
+    : ""
 }
+`;
 
 if("serviceWorker" in navigator){
 navigator.serviceWorker.register("service-worker.js");
