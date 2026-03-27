@@ -100,11 +100,21 @@ app.get("/api/check/:barcode", async (req, res) => {
     if (harmful.length > 0) novaGroup = "NOVA 4";
 
     /* NATURAL VS ARTIFICIAL */
-    const artificialPercent = Math.min(
-      80,
-      harmful.length * 20 + caution.length * 10
-    );
-    const naturalPercent = 100 - artificialPercent;
+    let artificialPercent = 0;
+
+// base processing from NOVA
+if (novaGroup === "NOVA 4") artificialPercent += 50;
+else if (novaGroup === "NOVA 3") artificialPercent += 30;
+else if (novaGroup === "NOVA 2") artificialPercent += 15;
+
+// additives impact
+artificialPercent += harmful.length * 15;
+artificialPercent += caution.length * 8;
+
+// limit range
+artificialPercent = Math.min(90, artificialPercent);
+
+const naturalPercent = 100 - artificialPercent;
 
     /* AI HEALTH RISKS */
     let healthRisks = [];
