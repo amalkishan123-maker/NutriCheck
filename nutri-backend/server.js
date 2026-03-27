@@ -23,7 +23,7 @@ app.get("/api/check/:barcode", async (req, res) => {
 
     const d = await r.json();
 
-    // 🔥 FIXED PRODUCT CHECK
+    // 🔥 PRODUCT CHECK
     if (!d || d.status === 0) {
       return res.json({ error: "Product not found" });
     }
@@ -39,7 +39,7 @@ app.get("/api/check/:barcode", async (req, res) => {
     const fiber = n.fiber_100g ?? 0;
     const energy = n.energy_kcal_100g ?? 0;
 
-    // 🔥 FIXED INGREDIENT SOURCE
+    // 🔥 INGREDIENT SOURCE
     const ingredientsText = (
       p.ingredients_text ||
       p.ingredients ||
