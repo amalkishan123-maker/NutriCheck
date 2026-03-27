@@ -278,9 +278,7 @@ ingredients.innerHTML = `
 <h3>📋 Full Ingredients</h3>
 <p>${data.ingredientsList}</p>
 
-${
-  hasIngredients
-    ? `
+${hasIngredients ? `
 <hr style="margin:16px 0;opacity:0.2">
 
 <h3>⚠️ Processing Level</h3>
@@ -306,8 +304,8 @@ ${
       : "<li>No major risks detected</li>"
   }
 </ul>
-`
-    : ""
+` : ""}
+`;
 }
 
 if("serviceWorker" in navigator){
