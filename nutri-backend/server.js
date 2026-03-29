@@ -77,13 +77,14 @@ app.get("/api/check/:barcode", async (req, res) => {
       "sweetener"
     ];
 
-    let harmful = harmfulList.filter(i => ingredientsText.includes(i));
-    let caution = cautionList.filter(i => ingredientsText.includes(i));
     let safe = [];
 
-    if (harmful.length === 0 && caution.length === 0) {
-      safe.push("Mostly natural ingredients");
-    }
+if (harmful.length === 0 && caution.length === 0) {
+  safe.push("Mostly natural ingredients");
+} 
+else if (harmful.length === 0 && caution.length > 0) {
+  safe.push("No harmful additives, but some processed ingredients");
+}
 
     /* NOVA DETECTION */
     const ingredientCount = ingredientsText
