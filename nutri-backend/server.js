@@ -35,9 +35,9 @@ app.get("/api/check/:barcode", async (req, res) => {
     const n = p.nutriments || {};
 
     const sugar = n.sugars_100g ?? 0;
-    const fat = n.saturated_fat_100g ?? 0;
-    const fiber = n.fiber_100g ?? 0;
-    const energy = n.energy_kcal_100g ?? 0;
+const fat = n.fat_100g ?? n.saturated_fat_100g ?? 0;
+const fiber = n.fiber_100g ?? 0;
+const energy = n.energy_kcal_100g ?? n["energy-kcal_100g"] ?? 0;
 
     // 🔥 INGREDIENT SOURCE
     const ingredientsText = (
